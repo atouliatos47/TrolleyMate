@@ -76,8 +76,19 @@ const App = {
         document.documentElement.style.setProperty('--store-color', store.color);
         document.documentElement.style.setProperty('--store-color-dark', App.darken(store.color));
 
-        // Update header
-        document.getElementById('storeTitle').textContent = store.emoji + ' ' + store.name;
+        // Update header with logo
+        const logoDomain = UI.getStoreLogo(store.name);
+        const storeTitle = document.getElementById('storeTitle');
+        if (logoDomain) {
+            storeTitle.innerHTML = `
+                <img src="https://www.google.com/s2/favicons?domain=${logoDomain}&sz=128"
+                    alt="${store.name}"
+                    onerror="this.style.display='none'"
+                    style="width:28px;height:28px;object-fit:contain;border-radius:6px;background:white;padding:2px;vertical-align:middle;margin-right:8px;">
+                ${store.name}`;
+        } else {
+            storeTitle.textContent = store.name;
+        }
 
         // Show store view, hide home
         document.getElementById('homeScreen').classList.add('hidden');
@@ -109,7 +120,18 @@ const App = {
     openShoppingMode() {
         const store = API.stores.find(s => s.id === API.currentStoreId);
         if (!store) return;
-        document.getElementById('shoppingModeTitle').textContent = store.emoji + ' ' + store.name;
+        const logoDomain = UI.getStoreLogo(store.name);
+        const titleEl = document.getElementById('shoppingModeTitle');
+        if (logoDomain) {
+            titleEl.innerHTML = `
+                <img src="https://www.google.com/s2/favicons?domain=${logoDomain}&sz=128"
+                    alt="${store.name}"
+                    onerror="this.style.display='none'"
+                    style="width:26px;height:26px;object-fit:contain;border-radius:6px;background:white;padding:2px;vertical-align:middle;margin-right:8px;">
+                ${store.name}`;
+        } else {
+            titleEl.textContent = store.name;
+        }
         document.getElementById('shoppingModeOverlay').classList.remove('hidden');
         // Hide My List button — home button handles going back
         document.getElementById('navBtnShop').classList.add('hidden');

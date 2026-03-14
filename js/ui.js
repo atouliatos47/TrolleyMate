@@ -46,11 +46,11 @@ const UI = {
             const logoDomain = this.getStoreLogo(store.name);
             const avatarHtml = logoDomain
                 ? `<div class="store-card-avatar store-card-avatar-logo" id="avatar-${store.id}">
-                       <img src="https://logo.clearbit.com/${logoDomain}"
+                       <img src="https://www.google.com/s2/favicons?domain=${logoDomain}&sz=128"
                            alt="${Utils.escapeHtml(store.name)}"
                            onload="this.style.opacity=1"
                            onerror="UI.logoFallback(${store.id},'${initials}','${store.color}')"
-                           style="width:32px;height:32px;object-fit:contain;opacity:0;transition:opacity 0.3s;">
+                           style="width:40px;height:40px;object-fit:contain;opacity:0;transition:opacity 0.3s;border-radius:6px;">
                    </div>`
                 : `<div class="store-card-avatar" style="background:${store.color};">
                        <span class="store-card-initials">${initials}</span>
@@ -147,20 +147,75 @@ const UI = {
             const listItem = API.storeItems.find(i => i.name.toLowerCase() === name.toLowerCase() && !i.isChecked);
             const inList = !!listItem;
             const qty = listItem ? listItem.quantity : 0;
+            const itemId = listItem ? listItem.id : null;
             return `
                 <div class="panel-chip ${inList ? 'in-list' : ''}"
-                    onclick="UI.handlePanelProductTap('${name.replace(/'/g, "\\'")}', ${aisleId}, this)">
+                    onclick="UI.handlePanelProductTap('${name.replace(/'/g, "\'")}', ${aisleId}, this)"
+                    data-item-id="${itemId}"
+                    data-aisle-id="${aisleId}"
+                    data-name="${name.replace(/'/g, "\'")}"
+                    data-in-list="${inList}">
                     <span class="panel-chip-name">${Utils.escapeHtml(name)}</span>
                     <span class="panel-chip-badge ${inList ? 'in' : 'add'}">${inList ? '\u2713 In list' + (qty > 1 ? ' x' + qty : '') : '+ Add'}</span>
                 </div>`;
         }).join('');
+
+        // Long press to remove on touch devices
+        container.querySelectorAll('.panel-chip[data-in-list="true"]').forEach(chip => {
+            let pressTimer;
+            chip.addEventListener('touchstart', () => {
+                pressTimer = setTimeout(() => {
+                    const id = parseInt(chip.dataset.itemId);
+                    const nm = chip.dataset.name;
+                    const aid = parseInt(chip.dataset.aisleId);
+                    if (id) UI.handlePanelProductLongPress(id, nm, aid);
+                }, 600);
+            }, { passive: true });
+            chip.addEventListener('touchend', () => clearTimeout(pressTimer), { passive: true });
+            chip.addEventListener('touchmove', () => clearTimeout(pressTimer), { passive: true });
+            // Right-click on desktop
+            chip.addEventListener('contextmenu', (e) => {
+                e.preventDefault();
+                const id = parseInt(chip.dataset.itemId);
+                const nm = chip.dataset.name;
+                const aid = parseInt(chip.dataset.aisleId);
+                if (id) UI.handlePanelProductLongPress(id, nm, aid);
+            });
+        });
+    },
+
+    handlePanelProductLongPress(itemId, name, aisleId) {
+        if (!itemId) return;
+        const modal = document.getElementById('modal');
+        const overlay = document.getElementById('modalOverlay');
+        modal.innerHTML = `
+            <h3>Remove from list?</h3>
+            <p class="modal-sub">Remove <strong>${Utils.escapeHtml(name)}</strong> from your shopping list?</p>
+            <div class="modal-actions">
+                <button class="modal-btn cancel" onclick="Utils.closeModal()">Cancel</button>
+                <button class="modal-btn danger" onclick="UI.removePanelItem(${itemId}, ${aisleId})">Remove</button>
+            </div>`;
+        overlay.classList.add('show');
+    },
+
+    async removePanelItem(itemId, aisleId) {
+        try {
+            await API.deleteItem(itemId);
+            Utils.closeModal();
+            Utils.showToast('Removed from list ✓');
+            this.renderAislePanelProducts(aisleId);
+        } catch(e) { Utils.showToast('Failed to remove', true); }
     },
 
     async handlePanelProductTap(name, aisleId, chipEl) {
+        // Prevent double-tap race condition
+        if (chipEl.dataset.busy === 'true') return;
+        chipEl.dataset.busy = 'true';
         chipEl.style.opacity = '0.5';
-        setTimeout(() => chipEl.style.opacity = '1', 300);
+        chipEl.style.pointerEvents = 'none';
+
         try {
-            // Check if already in list — if so increment quantity
+            // Always re-check storeItems at tap time for freshest state
             const existing = API.storeItems.find(i => i.name.toLowerCase() === name.toLowerCase() && !i.isChecked);
             if (existing) {
                 await fetch(`/items/${existing.id}/quantity`, {
@@ -176,6 +231,10 @@ const UI = {
             this.renderAislePanelProducts(aisleId);
         } catch(e) {
             Utils.showToast('Failed to add item', true);
+        } finally {
+            chipEl.dataset.busy = 'false';
+            chipEl.style.opacity = '1';
+            chipEl.style.pointerEvents = '';
         }
     },
 
