@@ -13,9 +13,7 @@
     <meta name="apple-mobile-web-app-title" content="TrolleyMate">
     <link rel="manifest" href="/manifest.json">
     <link rel="apple-touch-icon" sizes="180x180" href="/img/icon-180.png">
-
     <link rel="stylesheet" href="/css/style.css">
-
     <script>
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('/sw.js');
@@ -26,56 +24,41 @@
 
     <!-- HEADER -->
     <div class="header">
-        <div class="header-top">
-            <div class="app-title">🛒 Trolley<span>Mate</span></div>
+        <div class="header-left">
+            <span class="app-logo">🛒</span>
+            <span class="app-title">Trolley<span>Mate</span></span>
+        </div>
+        <div class="header-center" id="statsBar">Your list is empty</div>
+        <div class="header-right">
             <div class="connection-badge" id="connectionBadge">○ Connecting</div>
         </div>
-        <div class="stats-bar" id="statsBar">Loading...</div>
     </div>
 
-    <!-- LIST TAB -->
-    <div class="content tab-content" data-tab="list">
-        <button class="clear-btn" onclick="App.clearChecked()">🗑 Clear Checked Items</button>
-        <div id="listContainer"></div>
-    </div>
+    <!-- MAIN 2-COLUMN LAYOUT -->
+    <div class="main-layout">
 
-    <!-- ADD TAB -->
-    <div class="content tab-content hidden" data-tab="add">
-        <div class="add-form">
-            <h2>➕ Add Item</h2>
-            <div class="form-group">
-                <label>Item Name</label>
-                <input type="text" id="itemInput" placeholder="e.g. Milk, Bread, Eggs...">
+        <!-- LEFT: AISLES PANEL -->
+        <div class="aisles-panel">
+            <div class="panel-header">
+                <h2>🏪 Store Aisles</h2>
+                <span class="panel-sub">Tap a product to add to list</span>
             </div>
-            <div class="form-group">
-                <label>Aisle</label>
-                <select id="aisleSelect">
-                    <option value="">— Select Aisle —</option>
-                </select>
+            <div class="aisles-container" id="aislesContainer">
+                <!-- Aisles rendered here -->
             </div>
-            <button class="add-btn" onclick="App.addItem()">Add to List</button>
         </div>
-    </div>
 
-    <!-- FAVOURITES TAB -->
-    <div class="content tab-content hidden" data-tab="favourites">
-        <div id="favouritesContainer"></div>
-    </div>
+        <!-- RIGHT: SHOPPING LIST PANEL -->
+        <div class="list-panel">
+            <div class="panel-header">
+                <h2>📋 Shopping List</h2>
+                <button class="clear-btn-sm" onclick="App.clearChecked()">🗑 Clear checked</button>
+            </div>
+            <div class="list-container" id="listContainer">
+                <!-- List rendered here -->
+            </div>
+        </div>
 
-    <!-- BOTTOM TABS -->
-    <div class="tabs">
-        <button class="tab-btn active" data-tab="list">
-            <span class="tab-icon">📋</span>
-            List
-        </button>
-        <button class="tab-btn" data-tab="add">
-            <span class="tab-icon">➕</span>
-            Add
-        </button>
-        <button class="tab-btn" data-tab="favourites">
-            <span class="tab-icon">⭐</span>
-            Favourites
-        </button>
     </div>
 
     <!-- MODAL -->

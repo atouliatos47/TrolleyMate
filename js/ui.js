@@ -1,25 +1,12 @@
 const UI = {
-    currentTab: 'list',
-
-    switchTab(tab) {
-        this.currentTab = tab;
-        document.querySelectorAll('.tab-btn').forEach(btn => {
-            btn.classList.toggle('active', btn.dataset.tab === tab);
-        });
-        document.querySelectorAll('.tab-content').forEach(el => {
-            el.classList.toggle('hidden', el.dataset.tab !== tab);
-        });
-        this.render();
-    },
 
     render() {
-        if (this.currentTab === 'list') this.renderList();
-        if (this.currentTab === 'favourites') this.renderFavourites();
-        if (this.currentTab === 'add') this.renderAisleSelect();
+        this.renderAisles();
+        this.renderList();
         this.renderStats();
     },
 
-    // ===== STATS BAR =====
+    // ===== STATS =====
     renderStats() {
         const total = API.items.length;
         const checked = API.items.filter(i => i.isChecked).length;
@@ -30,38 +17,143 @@ const UI = {
             : `${checked} of ${total} items collected`;
     },
 
-    // ===== SHOPPING LIST (sorted by aisle) =====
+    // ===== AISLES PANEL =====
+    renderAisles() {
+        const container = document.getElementById('aislesContainer');
+        if (!container) return;
+
+        if (!API.aisles.length) {
+            container.innerHTML = `<div class="empty-state"><div class="empty-icon">🏪</div><p>No aisles yet</p></div>`;
+            return;
+        }
+
+        // Preserve open states
+        const openIds = new Set();
+        container.querySelectorAll('.aisle-card.open').forEach(el => {
+            openIds.add(parseInt(el.dataset.aisleId));
+        });
+
+        container.innerHTML = API.aisles
+            .sort((a, b) => a.sortOrder - b.sortOrder)
+            .map(aisle => this.renderAisleCard(aisle, openIds.has(aisle.id)))
+            .join('');
+    },
+
+    renderAisleCard(aisle, isOpen) {
+        const products = aisle.products || [];
+        const itemNames = API.items.map(i => i.name.toLowerCase());
+
+        const chipsHtml = products.length
+            ? products.map(name => {
+                const inList = itemNames.includes(name.toLowerCase());
+                return `<div class="product-chip ${inList ? 'in-list' : ''}"
+                    onclick="UI.handleProductTap(event, '${name.replace(/'/g, "\\'")}', ${aisle.id}, this)">
+                    ${Utils.escapeHtml(name)}${inList ? ' ✓' : ''}
+                </div>`;
+            }).join('')
+            : `<span class="no-products">No products yet</span>`;
+
+        return `
+            <div class="aisle-card ${isOpen ? 'open' : ''}" data-aisle-id="${aisle.id}">
+                <div class="aisle-card-header" onclick="UI.toggleAisle(${aisle.id})">
+                    <span class="aisle-card-icon">🏪</span>
+                    <span class="aisle-card-name">${Utils.escapeHtml(aisle.name)}</span>
+                    ${products.length ? `<span class="aisle-card-count">${products.length}</span>` : ''}
+                    <button class="aisle-manage-btn" onclick="event.stopPropagation(); UI.showManageProducts(${aisle.id})">⚙️</button>
+                    <span class="aisle-card-toggle">▼</span>
+                </div>
+                <div class="aisle-products">
+                    ${chipsHtml}
+                </div>
+            </div>
+        `;
+    },
+
+    toggleAisle(aisleId) {
+        const card = document.querySelector(`.aisle-card[data-aisle-id="${aisleId}"]`);
+        if (card) card.classList.toggle('open');
+    },
+
+    // ===== FLY ANIMATION =====
+    async handleProductTap(event, name, aisleId, chipEl) {
+        // Check if already in list
+        const alreadyIn = API.items.some(i =>
+            i.name.toLowerCase() === name.toLowerCase() && !i.isChecked
+        );
+        if (alreadyIn) {
+            Utils.showToast(`${name} is already in your list!`, true);
+            return;
+        }
+
+        // Get chip position for animation
+        const chipRect = chipEl.getBoundingClientRect();
+
+        // Get list panel position as target
+        const listPanel = document.getElementById('listContainer');
+        const listRect = listPanel.getBoundingClientRect();
+        const targetX = listRect.left + listRect.width / 2;
+        const targetY = listRect.top + 60;
+
+        // Create flying element
+        const flyer = document.createElement('div');
+        flyer.className = 'flying-chip';
+        flyer.textContent = name;
+        flyer.style.left = chipRect.left + 'px';
+        flyer.style.top = chipRect.top + 'px';
+        flyer.style.width = chipRect.width + 'px';
+        document.body.appendChild(flyer);
+
+        // Trigger animation on next frame
+        requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+                flyer.style.left = targetX + 'px';
+                flyer.style.top = targetY + 'px';
+                flyer.style.width = '80px';
+                flyer.style.opacity = '0';
+                flyer.style.transform = 'scale(0.5)';
+            });
+        });
+
+        // Add item to list
+        try {
+            await API.addItem({ name, aisleId, quantity: 1 });
+        } catch(e) {
+            Utils.showToast('Failed to add item', true);
+        }
+
+        // Remove flyer after animation
+        setTimeout(() => {
+            if (flyer.parentNode) flyer.parentNode.removeChild(flyer);
+        }, 500);
+    },
+
+    // ===== SHOPPING LIST =====
     renderList() {
         const container = document.getElementById('listContainer');
         if (!container) return;
 
         const items = API.items;
 
-        if (items.length === 0) {
+        if (!items.length) {
             container.innerHTML = `
                 <div class="empty-state">
                     <div class="empty-icon">🛒</div>
                     <p>Your list is empty!</p>
-                    <p class="empty-sub">Add items using the Add tab below.</p>
-                </div>
-            `;
+                    <p class="empty-sub">Tap any product on the left to add it.</p>
+                </div>`;
             return;
         }
 
-        // Group by aisle
+        // Group by aisle, sorted by aisle order
         const grouped = {};
         const noAisle = [];
 
         items.forEach(item => {
-            if (!item.aisleId) {
-                noAisle.push(item);
-            } else {
-                if (!grouped[item.aisleId]) grouped[item.aisleId] = [];
-                grouped[item.aisleId].push(item);
-            }
+            if (!item.aisleId) { noAisle.push(item); return; }
+            if (!grouped[item.aisleId]) grouped[item.aisleId] = [];
+            grouped[item.aisleId].push(item);
         });
 
-        // Sort aisles by sort order
         const sortedAisles = API.aisles
             .filter(a => grouped[a.id])
             .sort((a, b) => a.sortOrder - b.sortOrder);
@@ -70,26 +162,27 @@ const UI = {
 
         sortedAisles.forEach(aisle => {
             const aisleItems = grouped[aisle.id];
-            html += `<div class="aisle-group">
-                <div class="aisle-header">
-                    <span class="aisle-icon">🏪</span>
-                    <span class="aisle-name">${Utils.escapeHtml(aisle.name)}</span>
-                    <span class="aisle-count">${aisleItems.length}</span>
-                    <button class="aisle-manage-btn" onclick="event.stopPropagation();UI.showSelectProducts(${aisle.id})">+ Add</button>
-                </div>
-                ${aisleItems.map(item => this.renderItem(item)).join('')}
-            </div>`;
+            html += `
+                <div class="aisle-group">
+                    <div class="aisle-group-header">
+                        <span>🏪</span>
+                        <span>${Utils.escapeHtml(aisle.name)}</span>
+                        <span class="aisle-group-count">${aisleItems.length}</span>
+                    </div>
+                    ${aisleItems.map(item => this.renderItem(item)).join('')}
+                </div>`;
         });
 
         if (noAisle.length) {
-            html += `<div class="aisle-group">
-                <div class="aisle-header">
-                    <span class="aisle-icon">📦</span>
-                    <span class="aisle-name">Other</span>
-                    <span class="aisle-count">${noAisle.length}</span>
-                </div>
-                ${noAisle.map(item => this.renderItem(item)).join('')}
-            </div>`;
+            html += `
+                <div class="aisle-group">
+                    <div class="aisle-group-header">
+                        <span>📦</span>
+                        <span>Other</span>
+                        <span class="aisle-group-count">${noAisle.length}</span>
+                    </div>
+                    ${noAisle.map(item => this.renderItem(item)).join('')}
+                </div>`;
         }
 
         container.innerHTML = html;
@@ -98,125 +191,92 @@ const UI = {
     renderItem(item) {
         return `
             <div class="item-card ${item.isChecked ? 'checked' : ''}">
-                <div class="item-check" onclick="UI.handleCheck(${item.id})">
-                    <div class="checkbox ${item.isChecked ? 'checked' : ''}">
-                        ${item.isChecked ? '✓' : ''}
-                    </div>
+                <div class="checkbox ${item.isChecked ? 'checked' : ''}"
+                    onclick="UI.handleCheck(${item.id})">
+                    ${item.isChecked ? '✓' : ''}
                 </div>
-                <div class="item-info" onclick="UI.handleCheck(${item.id})">
-                    <div class="item-name ${item.isChecked ? 'crossed' : ''}">${Utils.escapeHtml(item.name)}</div>
+                <div class="item-name ${item.isChecked ? 'crossed' : ''}"
+                    onclick="UI.handleCheck(${item.id})">
+                    ${Utils.escapeHtml(item.name)}
                 </div>
                 ${item.quantity > 1 ? `<span class="qty-badge">x${item.quantity}</span>` : ''}
-                <div class="item-actions">
-                    <button class="icon-btn fav-btn ${item.isFavourite ? 'active' : ''}" onclick="UI.handleFavourite(${item.id})" title="Favourite">⭐</button>
-                    <button class="icon-btn del-btn" onclick="UI.handleDelete(${item.id})" title="Delete">🗑</button>
-                </div>
-            </div>
-        `;
+                <button class="del-btn" onclick="UI.handleDelete(${item.id})">🗑</button>
+            </div>`;
     },
 
-    // ===== FAVOURITES TAB =====
-    renderFavourites() {
-        const container = document.getElementById('favouritesContainer');
-        if (!container) return;
-
-        const favs = API.items.filter(i => i.isFavourite);
-        const allFavs = favs.length > 0 ? favs : this.getDefaultFavourites();
-
-        if (allFavs.length === 0) {
-            container.innerHTML = `
-                <div class="empty-state">
-                    <div class="empty-icon">⭐</div>
-                    <p>No favourites yet!</p>
-                    <p class="empty-sub">Tap ⭐ on any item to save it as a favourite.</p>
-                </div>
-            `;
-            return;
-        }
-
-        container.innerHTML = allFavs.map(item => `
-            <div class="fav-card">
-                <div class="fav-name">${Utils.escapeHtml(item.name)}</div>
-                <div class="fav-aisle">${API.aisles.find(a => a.id === item.aisleId)?.name || 'No aisle'}</div>
-                <button class="fav-add-btn" onclick="UI.addFavouriteToList(${item.id})">+ Add</button>
-            </div>
-        `).join('');
+    // ===== HANDLERS =====
+    async handleCheck(id) {
+        try {
+            await API.toggleCheck(id);
+            const item = API.items.find(i => i.id === id);
+            if (item && item.isChecked) {
+                setTimeout(async () => {
+                    try { await API.deleteItem(id); } catch(e) {}
+                }, 800);
+            }
+        } catch(e) { Utils.showToast('Failed to update item', true); }
     },
 
-    getDefaultFavourites() {
-        return [];
-    },
-
-    async addFavouriteToList(id) {
+    async handleDelete(id) {
         const item = API.items.find(i => i.id === id);
         if (!item) return;
-        try {
-            await API.addItem({
-                name: item.name,
-                aisleId: item.aisleId,
-                quantity: 1,
-                isFavourite: false
-            });
-            UI.switchTab('list');
-            Utils.showToast(`${item.name} added to list! 🛒`);
-        } catch (e) {
-            Utils.showToast('Failed to add item', true);
-        }
+        const modal = document.getElementById('modal');
+        const overlay = document.getElementById('modalOverlay');
+        modal.innerHTML = `
+            <h3>🗑 Remove Item</h3>
+            <p class="modal-sub">Remove <strong>${Utils.escapeHtml(item.name)}</strong> from your list?</p>
+            <div class="modal-actions">
+                <button class="modal-btn cancel" onclick="Utils.closeModal()">Cancel</button>
+                <button class="modal-btn danger" onclick="UI.confirmDelete(${id})">Remove</button>
+            </div>`;
+        overlay.classList.add('show');
     },
 
-    // ===== AISLE SELECT (Add tab) =====
-    renderAisleSelect() {
-        const select = document.getElementById('aisleSelect');
-        if (!select || select.children.length > 1) return;
-        select.innerHTML = '<option value="">— Select Aisle —</option>' +
-            API.aisles
-                .sort((a, b) => a.sortOrder - b.sortOrder)
-                .map(a => `<option value="${a.id}">${Utils.escapeHtml(a.name)}</option>`)
-                .join('');
+    async confirmDelete(id) {
+        try {
+            await API.deleteItem(id);
+            Utils.closeModal();
+            Utils.showToast('Item removed ✓');
+        } catch(e) { Utils.showToast('Failed to remove item', true); }
     },
 
     // ===== PRODUCT LIBRARY =====
-
     showManageProducts(aisleId) {
         const aisle = API.aisles.find(a => a.id === aisleId);
         if (!aisle) return;
-
         const modal = document.getElementById('modal');
         const overlay = document.getElementById('modalOverlay');
 
-        const renderProducts = () => {
+        const renderList = () => {
             const list = document.getElementById('productLibraryList');
             if (!list) return;
-            const aisle = API.aisles.find(a => a.id === aisleId);
-            if (!aisle || !aisle.products.length) {
+            const a = API.aisles.find(x => x.id === aisleId);
+            if (!a || !a.products.length) {
                 list.innerHTML = '<p style="color:#9ca3af;font-size:13px;padding:8px 0;">No products yet. Add some below!</p>';
                 return;
             }
-            list.innerHTML = aisle.products.map(name => `
+            list.innerHTML = a.products.map(name => `
                 <div class="product-lib-item">
                     <span>${Utils.escapeHtml(name)}</span>
-                    <button class="icon-btn del-btn" onclick="UI.deleteProduct(${aisleId}, '${name.replace(/'/g, "\'")}', ${aisleId})">🗑</button>
-                </div>
-            `).join('');
+                    <button class="del-btn" onclick="UI.deleteProduct(${aisleId}, '${name.replace(/'/g, "\\'")}')">🗑</button>
+                </div>`).join('');
         };
 
         modal.innerHTML = `
-            <h3>📦 ${Utils.escapeHtml(aisle.name)}</h3>
-            <p class="modal-sub">Manage your regular products for this aisle</p>
+            <h3>⚙️ ${Utils.escapeHtml(aisle.name)}</h3>
+            <p class="modal-sub">Manage products for this aisle</p>
             <div id="productLibraryList" style="margin:14px 0;max-height:220px;overflow-y:auto;"></div>
             <div style="display:flex;gap:8px;margin-top:8px;">
-                <input type="text" id="newProductInput" placeholder="Add product name..." 
-                    style="flex:1;padding:10px 12px;border:1.5px solid #e5e7eb;border-radius:10px;font-size:14px;outline:none;"
+                <input type="text" id="newProductInput" placeholder="Add product name..."
+                    style="flex:1;padding:10px 12px;border:1.5px solid #e5e7eb;border-radius:10px;font-size:16px;outline:none;"
                     onkeypress="if(event.key==='Enter') UI.addProduct(${aisleId})">
-                <button class="modal-btn confirm" style="flex:0;padding:10px 16px;" onclick="UI.addProduct(${aisleId})">Add</button>
+                <button class="modal-btn confirm" style="flex:0;padding:10px 16px;min-height:auto;" onclick="UI.addProduct(${aisleId})">Add</button>
             </div>
-            <div class="modal-actions" style="margin-top:12px;">
+            <div class="modal-actions">
                 <button class="modal-btn cancel" onclick="Utils.closeModal()">Close</button>
-                <button class="modal-btn confirm" onclick="UI.showSelectProducts(${aisleId})">🛒 Add to List</button>
-            </div>
-        `;
+            </div>`;
         overlay.classList.add('show');
-        renderProducts();
+        renderList();
     },
 
     async addProduct(aisleId) {
@@ -227,16 +287,14 @@ const UI = {
             await API.addProduct(aisleId, name);
             input.value = '';
             input.focus();
-            // Re-render product list inside modal
-            const aisle = API.aisles.find(a => a.id === aisleId);
             const list = document.getElementById('productLibraryList');
+            const aisle = API.aisles.find(a => a.id === aisleId);
             if (list && aisle) {
                 list.innerHTML = aisle.products.map(n => `
                     <div class="product-lib-item">
                         <span>${Utils.escapeHtml(n)}</span>
-                        <button class="icon-btn del-btn" onclick="UI.deleteProduct(${aisleId}, '${n.replace(/'/g, "\'")}')">🗑</button>
-                    </div>
-                `).join('');
+                        <button class="del-btn" onclick="UI.deleteProduct(${aisleId}, '${n.replace(/'/g, "\\'")}')">🗑</button>
+                    </div>`).join('');
             }
         } catch(e) { Utils.showToast('Failed to add product', true); }
     },
@@ -244,113 +302,15 @@ const UI = {
     async deleteProduct(aisleId, name) {
         try {
             await API.deleteProduct(aisleId, name);
-            const aisle = API.aisles.find(a => a.id === aisleId);
             const list = document.getElementById('productLibraryList');
+            const aisle = API.aisles.find(a => a.id === aisleId);
             if (list && aisle) {
                 list.innerHTML = aisle.products.map(n => `
                     <div class="product-lib-item">
                         <span>${Utils.escapeHtml(n)}</span>
-                        <button class="icon-btn del-btn" onclick="UI.deleteProduct(${aisleId}, '${n.replace(/'/g, "\'")}')">🗑</button>
-                    </div>
-                `).join('');
+                        <button class="del-btn" onclick="UI.deleteProduct(${aisleId}, '${n.replace(/'/g, "\\'")}')">🗑</button>
+                    </div>`).join('');
             }
         } catch(e) { Utils.showToast('Failed to delete product', true); }
-    },
-
-    showSelectProducts(aisleId) {
-        const aisle = API.aisles.find(a => a.id === aisleId);
-        if (!aisle) return;
-
-        const modal = document.getElementById('modal');
-        const overlay = document.getElementById('modalOverlay');
-
-        if (!aisle.products || !aisle.products.length) {
-            Utils.showToast('No products in library yet! Add some first.', true);
-            return;
-        }
-
-        modal.innerHTML = `
-            <h3>🛒 Add from ${Utils.escapeHtml(aisle.name)}</h3>
-            <p class="modal-sub">Tap a product to add it to your list</p>
-            <div style="margin-top:14px;display:flex;flex-direction:column;gap:8px;max-height:350px;overflow-y:auto;">
-                ${aisle.products.map(name => {
-                    const inList = API.items.some(i => i.name === name && i.aisleId === aisleId && !i.isChecked);
-                    return `
-                        <div class="product-select-row ${inList ? 'in-list' : ''}" onclick="UI.quickAddProduct('${name.replace(/'/g, "\'")}', ${aisleId})">
-                            <span>${Utils.escapeHtml(name)}</span>
-                            ${inList ? '<span class="in-list-badge">✓ In list</span>' : '<span class="add-badge">+ Add</span>'}
-                        </div>
-                    `;
-                }).join('')}
-            </div>
-            <div class="modal-actions">
-                <button class="modal-btn cancel" onclick="Utils.closeModal()">Done</button>
-            </div>
-        `;
-        overlay.classList.add('show');
-    },
-
-    async quickAddProduct(name, aisleId) {
-        try {
-            await API.addItem({ name, aisleId, quantity: 1 });
-            // Refresh the modal to show updated in-list status
-            this.showSelectProducts(aisleId);
-            Utils.showToast(`${name} added! 🛒`);
-        } catch(e) { Utils.showToast('Failed to add item', true); }
-    },
-
-    // ===== HANDLERS =====
-    async handleCheck(id) {
-        try {
-            await API.toggleCheck(id);
-            const item = API.items.find(i => i.id === id);
-            if (item && item.isChecked) {
-                setTimeout(async () => {
-                    try {
-                        await API.deleteItem(id);
-                    } catch (e) {}
-                }, 800);
-            }
-        } catch (e) {
-            Utils.showToast('Failed to update item', true);
-        }
-    },
-
-    async handleFavourite(id) {
-        try {
-            await API.toggleFavourite(id);
-            Utils.showToast('Favourite updated ⭐');
-        } catch (e) {
-            Utils.showToast('Failed to update favourite', true);
-        }
-    },
-
-    async handleDelete(id) {
-        const item = API.items.find(i => i.id === id);
-        if (!item) return;
-
-        const modal = document.getElementById('modal');
-        const overlay = document.getElementById('modalOverlay');
-
-        modal.innerHTML = `
-            <h3>🗑 Remove Item</h3>
-            <p class="modal-sub">Remove <strong>${Utils.escapeHtml(item.name)}</strong> from your list?</p>
-            <div class="modal-actions">
-                <button class="modal-btn cancel" onclick="Utils.closeModal()">Cancel</button>
-                <button class="modal-btn danger" onclick="UI.confirmDelete(${id})">Remove</button>
-            </div>
-        `;
-        overlay.classList.add('show');
-    },
-
-    async confirmDelete(id) {
-        try {
-            await API.deleteItem(id);
-            Utils.closeModal();
-            Utils.showToast('Item removed ✓');
-        } catch (e) {
-            Utils.showToast('Failed to remove item', true);
-        }
     }
-
 };
