@@ -1,73 +1,89 @@
-// Main App Controller
 const App = {
-    userName: localStorage.getItem('sparesUser') || '',
-    
+
     init() {
-        console.log('App initializing... Current user:', this.userName);
+        console.log('TrolleyMate initializing...');
         this.setupEventListeners();
-        
-        if (this.userName) {
-            console.log('User found in localStorage:', this.userName);
-            this.showMainApp();
-            // Show splash on startup, then start idle timer
-            setTimeout(() => {
-                UI.showHome();
-                UI.startIdleTimer();
-            }, 100);
-        } else {
-            console.log('No user found, showing name screen');
-            document.getElementById('nameScreen').classList.remove('hidden');
-        }
-    },
-
-    setName() {
-        const input = document.getElementById('nameInput');
-        const name = input.value.trim();
-        
-        if (!name) {
-            Utils.shakeElement(input);
-            return;
-        }
-        
-        this.userName = name;
-        localStorage.setItem('sparesUser', name);
-        console.log('Name set to:', name);
-        this.showMainApp();
-    },
-
-    showMainApp() {
-        document.getElementById('nameScreen').classList.add('hidden');
-        document.getElementById('appScreen').classList.remove('hidden');
-        API.connectSSE(this.userName);
-        this.startKeepAlive();
-    },
-
-    startKeepAlive() {
-        // Ping server every 10 minutes to prevent Render spin-down
-        setInterval(() => {
-            fetch('/items').catch(() => {});
-        }, 10 * 60 * 1000);
+        API.connectSSE();
+        API.startKeepAlive();
     },
 
     setupEventListeners() {
-        document.getElementById('nameInput').addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') this.setName();
-        });
-
-        // Auto-select text when clicking into any number input
-        document.querySelectorAll('input[type="number"]').forEach(input => {
-            input.addEventListener('focus', function() {
-                this.select();
-            });
-        });
-
+        // Close modal on overlay click
         document.getElementById('modalOverlay').addEventListener('click', (e) => {
             if (e.target === document.getElementById('modalOverlay')) {
                 Utils.closeModal();
             }
         });
+
+        // Add item on Enter key
+        document.getElementById('itemInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') App.addItem();
+        });
+
+        // Tab switching
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const tab = btn.dataset.tab;
+                UI.switchTab(tab);
+            });
+        });
+    },
+
+    async addItem() {
+        const input = document.getElementById('itemInput');
+        const aisleSelect = document.getElementById('aisleSelect');
+        const name = input.value.trim();
+
+        if (!name) {
+            Utils.shakeElement(input);
+            return;
+        }
+
+        try {
+            await API.addItem({
+                name,
+                aisleId: aisleSelect.value || null,
+                quantity: 1
+            });
+            input.value = '';
+            aisleSelect.value = '';
+            Utils.showToast(`${name} added! 🛒`);
+        } catch (e) {
+            Utils.showToast('Failed to add item', true);
+        }
+    },
+
+    async clearChecked() {
+        const checked = API.items.filter(i => i.isChecked);
+        if (!checked.length) {
+            Utils.showToast('No checked items to clear!', true);
+            return;
+        }
+
+        const modal = document.getElementById('modal');
+        const overlay = document.getElementById('modalOverlay');
+
+        modal.innerHTML = `
+            <h3>🗑 Clear Checked Items</h3>
+            <p class="modal-sub">${checked.length} item${checked.length > 1 ? 's' : ''} will be removed from your list.</p>
+            <div class="modal-actions">
+                <button class="modal-btn cancel" onclick="Utils.closeModal()">Cancel</button>
+                <button class="modal-btn danger" onclick="App.confirmClearChecked()">Clear All</button>
+            </div>
+        `;
+        overlay.classList.add('show');
+    },
+
+    async confirmClearChecked() {
+        try {
+            await API.clearChecked();
+            Utils.closeModal();
+            Utils.showToast('Checked items cleared! ✓');
+        } catch (e) {
+            Utils.showToast('Failed to clear items', true);
+        }
     }
+
 };
 
-// Start the app when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => App.init());

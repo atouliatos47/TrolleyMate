@@ -18,8 +18,13 @@ async function initDb() {
         CREATE TABLE IF NOT EXISTS aisles (
             id SERIAL PRIMARY KEY,
             name TEXT NOT NULL,
-            sort_order INTEGER NOT NULL
+            sort_order INTEGER NOT NULL,
+            products JSONB NOT NULL DEFAULT '[]'
         )
+    `);
+    // Add products column if upgrading existing database
+    await pool.query(`
+        ALTER TABLE aisles ADD COLUMN IF NOT EXISTS products JSONB NOT NULL DEFAULT '[]'
     `);
     await pool.query(`
         CREATE TABLE IF NOT EXISTS items (
@@ -93,7 +98,7 @@ function mapItem(row) {
 }
 
 function mapAisle(row) {
-    return { id: row.id, name: row.name, sortOrder: row.sort_order };
+    return { id: row.id, name: row.name, sortOrder: row.sort_order, products: row.products || [] };
 }
 
 async function getBody(req) {
@@ -168,6 +173,50 @@ const server = http.createServer(async (req, res) => {
         const r = await pool.query('SELECT * FROM aisles ORDER BY sort_order ASC');
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify(r.rows.map(mapAisle)));
+        return;
+    }
+
+    // ===== ADD PRODUCT TO AISLE =====
+    const addProductMatch = p.pathname.match(/^\/aisles\/(\d+)\/products$/);
+    if (addProductMatch && req.method === 'POST') {
+        try {
+            const b = await getBody(req);
+            const id = parseInt(addProductMatch[1]);
+            const r = await pool.query('SELECT products FROM aisles WHERE id=$1', [id]);
+            if (!r.rows.length) { res.writeHead(404); return res.end(JSON.stringify({ error: 'Not found' })); }
+            const products = r.rows[0].products || [];
+            if (!products.includes(b.name)) {
+                products.push(b.name);
+                products.sort((a, z) => a.localeCompare(z));
+            }
+            const updated = await pool.query(
+                'UPDATE aisles SET products=$1 WHERE id=$2 RETURNING *',
+                [JSON.stringify(products), id]
+            );
+            const aisle = mapAisle(updated.rows[0]);
+            broadcast('updateAisle', aisle);
+            res.end(JSON.stringify(aisle));
+        } catch (e) { res.writeHead(400); res.end(JSON.stringify({ error: 'Invalid request' })); }
+        return;
+    }
+
+    // ===== DELETE PRODUCT FROM AISLE =====
+    const delProductMatch = p.pathname.match(/^\/aisles\/(\d+)\/products\/delete$/);
+    if (delProductMatch && req.method === 'POST') {
+        try {
+            const b = await getBody(req);
+            const id = parseInt(delProductMatch[1]);
+            const r = await pool.query('SELECT products FROM aisles WHERE id=$1', [id]);
+            if (!r.rows.length) { res.writeHead(404); return res.end(JSON.stringify({ error: 'Not found' })); }
+            const products = (r.rows[0].products || []).filter(p => p !== b.name);
+            const updated = await pool.query(
+                'UPDATE aisles SET products=$1 WHERE id=$2 RETURNING *',
+                [JSON.stringify(products), id]
+            );
+            const aisle = mapAisle(updated.rows[0]);
+            broadcast('updateAisle', aisle);
+            res.end(JSON.stringify(aisle));
+        } catch (e) { res.writeHead(400); res.end(JSON.stringify({ error: 'Invalid request' })); }
         return;
     }
 

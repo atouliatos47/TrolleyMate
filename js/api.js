@@ -1,202 +1,110 @@
-// API Communication
 const API = {
-    eventSource: null,
     items: [],
-    workstations: [],
-    
-    connectSSE(userName) {
-        console.log('Connecting SSE with username:', userName);
-        
-        if (this.eventSource) {
-            console.log('Closing existing connection');
-            this.eventSource.close();
-        }
+    aisles: [],
+    eventSource: null,
 
-        const safeName = userName || 'Anonymous';
-        const encodedName = encodeURIComponent(safeName);
-        const url = '/events?name=' + encodedName;
-        console.log('Connecting to:', url);
-        
-        this.eventSource = new EventSource(url);
+    connectSSE() {
+        console.log('Connecting SSE...');
+        this.eventSource = new EventSource('/events');
 
         this.eventSource.addEventListener('init', (e) => {
-            console.log('Received init event');
             const data = JSON.parse(e.data);
-            this.items = data.items || [];
-            this.workstations = data.workstations || [];
-            UI.renderItems();
-            UI.updateStats();
-            UI.updateAlerts();
-            UI.updateWorkstationDropdown();
-            UI.renderWorkstations();
-            Utils.setConnected(true);
-            Utils.hideLoading();
-        });
-
-        this.eventSource.addEventListener('users', (e) => {
-            console.log('Received users event with data:', e.data);
-            try {
-                const users = JSON.parse(e.data);
-                UI.updateUserList(users);
-            } catch (err) {
-                console.error('Error parsing users data:', err);
-            }
+            this.items = data.items;
+            this.aisles = data.aisles;
+            console.log('Received init event:', this.items.length, 'items,', this.aisles.length, 'aisles');
+            UI.render();
+            Utils.updateConnectionBadge(true);
         });
 
         this.eventSource.addEventListener('newItem', (e) => {
             const item = JSON.parse(e.data);
             this.items.push(item);
-            UI.renderItems();
-            UI.updateStats();
-            UI.updateAlerts();
-            if (item.addedBy !== userName) {
-                Utils.showToast(`${item.addedBy} added: ${item.name}`);
-            }
+            UI.render();
         });
 
         this.eventSource.addEventListener('updateItem', (e) => {
-            const updated = JSON.parse(e.data);
-            const index = this.items.findIndex(i => i.id === updated.id);
-            if (index !== -1) {
-                this.items[index] = updated;
-                UI.renderItems();
-                UI.updateStats();
-                UI.updateAlerts();
-                
-                if (updated.minStock > 0 && updated.quantity <= updated.minStock) {
-                    Utils.showToast('⚠️ LOW STOCK: ' + updated.name + ' (' + updated.quantity + ' left)', true);
-                }
-            }
+            const item = JSON.parse(e.data);
+            const idx = this.items.findIndex(i => i.id === item.id);
+            if (idx !== -1) this.items[idx] = item;
+            UI.render();
         });
 
         this.eventSource.addEventListener('deleteItem', (e) => {
-            const data = JSON.parse(e.data);
-            this.items = this.items.filter(i => i.id !== data.id);
-            UI.renderItems();
-            UI.updateStats();
-            UI.updateAlerts();
-            Utils.showToast('Item removed');
+            const { id } = JSON.parse(e.data);
+            this.items = this.items.filter(i => i.id !== id);
+            UI.render();
         });
 
-        // Workstation SSE events
-        this.eventSource.addEventListener('newWorkstation', (e) => {
-            const ws = JSON.parse(e.data);
-            this.workstations.push(ws);
-            UI.updateWorkstationDropdown();
-            UI.renderWorkstations();
-            if (ws.addedBy !== userName) {
-                Utils.showToast(`${ws.addedBy} added workstation: ${ws.name}`);
-            }
+        this.eventSource.addEventListener('updateAisle', (e) => {
+            const aisle = JSON.parse(e.data);
+            const idx = this.aisles.findIndex(a => a.id === aisle.id);
+            if (idx !== -1) this.aisles[idx] = aisle;
+            UI.render();
         });
 
-        this.eventSource.addEventListener('deleteWorkstation', (e) => {
-            const data = JSON.parse(e.data);
-            this.workstations = this.workstations.filter(ws => ws.id !== data.id);
-            // Unassign items linked to deleted workstation
-            this.items.forEach(item => {
-                if (item.workstationId === data.id) {
-                    item.workstationId = null;
-                }
-            });
-            UI.updateWorkstationDropdown();
-            UI.renderWorkstations();
-            UI.renderItems();
-            Utils.showToast('Workstation removed');
-        });
-
-        this.eventSource.onerror = (error) => {
-            console.error('SSE Error:', error);
-            Utils.setConnected(false);
-            Utils.showToast('Connection lost. Reconnecting...', true);
-            setTimeout(() => this.connectSSE(userName), 3000);
-        };
-
-        this.eventSource.onopen = () => {
-            console.log('SSE connection opened');
-            Utils.setConnected(true);
+        this.eventSource.onerror = () => {
+            Utils.updateConnectionBadge(false);
+            setTimeout(() => this.connectSSE(), 5000);
         };
     },
 
-    // ===== ITEM METHODS =====
-
-    async addItem(item) {
-        try {
-            const response = await fetch('/items', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(item)
-            });
-            if (!response.ok) throw new Error('Failed to add item');
-            return await response.json();
-        } catch (err) {
-            Utils.showToast('Error adding part', true);
-            throw err;
-        }
-    },
-
-    async useItem(id, amount, usedBy) {
-        const response = await fetch(`/items/${id}/use`, {
+    async addItem(data) {
+        const response = await fetch('/items', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ amount, usedBy })
+            body: JSON.stringify(data)
         });
-        if (!response.ok) throw new Error('Failed to use item');
+        if (!response.ok) throw new Error('Failed to add item');
         return await response.json();
     },
 
-    async restockItem(id, amount) {
-        const response = await fetch(`/items/${id}/restock`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ amount })
-        });
-        if (!response.ok) throw new Error('Failed to restock');
+    async toggleCheck(id) {
+        const response = await fetch(`/items/${id}/check`, { method: 'POST' });
+        if (!response.ok) throw new Error('Failed to toggle check');
+        return await response.json();
+    },
+
+    async toggleFavourite(id) {
+        const response = await fetch(`/items/${id}/favourite`, { method: 'POST' });
+        if (!response.ok) throw new Error('Failed to toggle favourite');
         return await response.json();
     },
 
     async deleteItem(id) {
         const response = await fetch(`/items/${id}/delete`, { method: 'POST' });
-        if (!response.ok) throw new Error('Failed to delete');
+        if (!response.ok) throw new Error('Failed to delete item');
         return await response.json();
     },
 
-    async updateItem(id, data) {
-        const response = await fetch(`/items/${id}/edit`, {
+    async clearChecked() {
+        const response = await fetch('/items/clear-checked', { method: 'POST' });
+        if (!response.ok) throw new Error('Failed to clear checked items');
+        return await response.json();
+    },
+
+    async addProduct(aisleId, name) {
+        const response = await fetch(`/aisles/${aisleId}/products`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(data)
+            body: JSON.stringify({ name })
         });
-        if (!response.ok) throw new Error('Failed to update item');
+        if (!response.ok) throw new Error('Failed to add product');
         return await response.json();
     },
 
-    // ===== WORKSTATION METHODS =====
-
-    async addWorkstation(ws) {
-        try {
-            const response = await fetch('/workstations', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(ws)
-            });
-            if (!response.ok) throw new Error('Failed to add workstation');
-            return await response.json();
-        } catch (err) {
-            Utils.showToast('Error adding workstation', true);
-            throw err;
-        }
-    },
-
-    async deleteWorkstation(id) {
-        const response = await fetch(`/workstations/${id}/delete`, { method: 'POST' });
-        if (!response.ok) throw new Error('Failed to delete workstation');
+    async deleteProduct(aisleId, name) {
+        const response = await fetch(`/aisles/${aisleId}/products/delete`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name })
+        });
+        if (!response.ok) throw new Error('Failed to delete product');
         return await response.json();
     },
 
-    // Helper: get workstation name by ID
-    getWorkstationName(id) {
-        if (!id) return null;
-        const ws = this.workstations.find(w => w.id === id);
-        return ws ? ws.name : null;
+    startKeepAlive() {
+        setInterval(() => {
+            fetch('/items').catch(() => {});
+        }, 10 * 60 * 1000);
     }
 };

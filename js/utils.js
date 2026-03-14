@@ -1,58 +1,22 @@
-// Utility Functions
 const Utils = {
-    toastTimeout: null,
 
-    escapeHtml(text) {
-        if (!text) return '';
+    escapeHtml(str) {
         const div = document.createElement('div');
-        div.textContent = text;
+        div.appendChild(document.createTextNode(str || ''));
         return div.innerHTML;
     },
 
-    formatTime(date) {
-        return new Date(date).toLocaleTimeString([], { 
-            hour: '2-digit', 
-            minute: '2-digit' 
-        });
-    },
-
-    formatDate(date) {
-        return new Date(date).toLocaleString();
-    },
-
-    debounce(func, wait) {
-        let timeout;
-        return function executedFunction(...args) {
-            const later = () => {
-                clearTimeout(timeout);
-                func(...args);
-            };
-            clearTimeout(timeout);
-            timeout = setTimeout(later, wait);
-        };
-    },
-
-    showLoading() {
-        document.getElementById('loadingSpinner').classList.add('show');
-    },
-
-    hideLoading() {
-        document.getElementById('loadingSpinner').classList.remove('show');
-    },
-
-    showToast(msg, isWarning = false) {
-        const toast = document.getElementById('toast');
-        // Clear any existing timeout so overlapping calls don't cancel each other
-        if (this.toastTimeout) {
-            clearTimeout(this.toastTimeout);
-            this.toastTimeout = null;
+    showToast(msg, isError = false) {
+        let toast = document.getElementById('toast');
+        if (!toast) {
+            toast = document.createElement('div');
+            toast.id = 'toast';
+            document.body.appendChild(toast);
         }
         toast.textContent = msg;
-        toast.className = `toast ${isWarning ? 'warning' : ''} show`;
-        this.toastTimeout = setTimeout(() => {
-            toast.classList.remove('show');
-            this.toastTimeout = null;
-        }, 3000);
+        toast.className = 'toast' + (isError ? ' toast-error' : '');
+        toast.classList.add('show');
+        setTimeout(() => toast.classList.remove('show'), 3000);
     },
 
     closeModal() {
@@ -60,14 +24,22 @@ const Utils = {
         document.getElementById('modal').innerHTML = '';
     },
 
-    setConnected(connected) {
-        const badge = document.getElementById('connBadge');
-        badge.className = `connection-badge ${connected ? '' : 'offline'}`;
-        badge.innerHTML = connected ? '● Live' : '○ Offline';
+    shakeElement(el) {
+        if (!el) return;
+        el.classList.add('shake');
+        setTimeout(() => el.classList.remove('shake'), 500);
     },
 
-    shakeElement(element) {
-        element.classList.add('error');
-        setTimeout(() => element.classList.remove('error'), 1500);
+    formatTime(dateStr) {
+        if (!dateStr) return '';
+        const d = new Date(dateStr);
+        return d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+    },
+
+    formatDate(dateStr) {
+        if (!dateStr) return '';
+        const d = new Date(dateStr);
+        return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' });
     }
+
 };
