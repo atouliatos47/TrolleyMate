@@ -178,14 +178,15 @@ const API = {
 
     async toggleCheck(id) {
         const r = await fetch(`/items/${id}/check`, { method: 'POST' });
-        if (!r.ok) throw new Error('Failed to toggle check');
-        return await r.json();
+        if (!r.ok && r.status !== 404) throw new Error('Failed to toggle check');
+        return r.status === 404 ? null : await r.json();
     },
 
     async deleteItem(id) {
         const r = await fetch(`/items/${id}/delete`, { method: 'POST' });
-        if (!r.ok) throw new Error('Failed to delete item');
-        return await r.json();
+        // Ignore 404 — item may have already been deleted
+        if (!r.ok && r.status !== 404) throw new Error('Failed to delete item');
+        return r.status === 404 ? { success: true } : await r.json();
     },
 
     async clearChecked() {

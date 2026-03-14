@@ -383,9 +383,25 @@ const UI = {
         try {
             const result = await API.toggleCheck(id);
             if (result && result.isChecked) {
-                setTimeout(async () => { try { await API.deleteItem(id); } catch(e) {} }, 700);
+                // Update local state immediately
+                const idx = API.items.findIndex(i => i.id === id);
+                if (idx !== -1) API.items[idx].isChecked = true;
+                this.renderList();
+                setTimeout(async () => {
+                    try {
+                        await API.deleteItem(id);
+                        // Remove from local state and re-render
+                        API.items = API.items.filter(i => i.id !== id);
+                        this.renderList();
+                    } catch(e) {
+                        API.items = API.items.filter(i => i.id !== id);
+                        this.renderList();
+                    }
+                }, 700);
             }
-        } catch(e) { Utils.showToast('Failed to update item', true); }
+        } catch(e) {
+            console.log('handleCheck error:', e);
+        }
     },
 
     async handleDelete(id) {

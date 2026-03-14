@@ -203,18 +203,21 @@ const App = {
     async toggleShopItem(id) {
         try {
             const result = await API.toggleCheck(id);
-            // Use the response directly — don't wait for SSE
             if (result && result.isChecked) {
+                // Update local state immediately
+                const idx = API.items.findIndex(i => i.id === id);
+                if (idx !== -1) API.items[idx].isChecked = true;
                 this.renderShoppingModeList();
                 setTimeout(async () => {
-                    try {
-                        await API.deleteItem(id);
-                    } catch(e) {}
+                    try { await API.deleteItem(id); } catch(e) {}
+                    // Always remove and re-render
+                    API.items = API.items.filter(i => i.id !== id);
+                    this.renderShoppingModeList();
                 }, 700);
             } else {
                 this.renderShoppingModeList();
             }
-        } catch(e) { Utils.showToast('Failed to update', true); }
+        } catch(e) { console.log('toggleShopItem error:', e); }
     },
 
     // ===== ADD STORE =====
