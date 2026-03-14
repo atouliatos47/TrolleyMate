@@ -1,0 +1,12 @@
+{
+  "name": "trolleymate",
+  "version": "1.0.0",
+  "description": "Tesco aisle-sorted shopping list app",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "pg": "^8.11.3"
+  }
+}
