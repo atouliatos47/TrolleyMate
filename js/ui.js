@@ -242,14 +242,16 @@ const UI = {
     },
 
     async handlePanelProductTap(name, aisleId, chipEl) {
-        // Prevent double-tap race condition
-        if (chipEl.dataset.busy === 'true') return;
-        chipEl.dataset.busy = 'true';
+        // Global lock per item name — prevents ANY double fire
+        const lockKey = `tap_${aisleId}_${name}`;
+        if (UI._tapLocks && UI._tapLocks[lockKey]) return;
+        if (!UI._tapLocks) UI._tapLocks = {};
+        UI._tapLocks[lockKey] = true;
+
         chipEl.style.opacity = '0.5';
         chipEl.style.pointerEvents = 'none';
 
         try {
-            // Always re-check storeItems at tap time for freshest state
             const existing = API.storeItems.find(i => i.name.toLowerCase() === name.toLowerCase() && !i.isChecked);
             if (existing) {
                 await fetch(`/items/${existing.id}/quantity`, {
@@ -266,7 +268,10 @@ const UI = {
         } catch(e) {
             Utils.showToast('Failed to add item', true);
         } finally {
-            chipEl.dataset.busy = 'false';
+            // Release lock after 1 second
+            setTimeout(() => {
+                if (UI._tapLocks) delete UI._tapLocks[lockKey];
+            }, 1000);
             chipEl.style.opacity = '1';
             chipEl.style.pointerEvents = '';
         }
@@ -352,13 +357,13 @@ const UI = {
         sortedAisles.forEach(aisle => {
             html += `<div class="aisle-group">
                 <div class="aisle-group-header"><span>🏪</span><span>${Utils.escapeHtml(aisle.name)}</span><span class="aisle-group-count">${grouped[aisle.id].length}</span></div>
-                ${grouped[aisle.id].map(item => this.renderItem(item)).join('')}
+                ${grouped[aisle.id].sort((a,b) => a.name.localeCompare(b.name)).map(item => this.renderItem(item)).join('')}
             </div>`;
         });
         if (noAisle.length) {
             html += `<div class="aisle-group">
                 <div class="aisle-group-header"><span>📦</span><span>Other</span><span class="aisle-group-count">${noAisle.length}</span></div>
-                ${noAisle.map(item => this.renderItem(item)).join('')}
+                ${noAisle.sort((a,b) => a.name.localeCompare(b.name)).map(item => this.renderItem(item)).join('')}
             </div>`;
         }
         container.innerHTML = html;
@@ -376,10 +381,9 @@ const UI = {
 
     async handleCheck(id) {
         try {
-            await API.toggleCheck(id);
-            const item = API.items.find(i => i.id === id);
-            if (item && item.isChecked) {
-                setTimeout(async () => { try { await API.deleteItem(id); } catch(e) {} }, 800);
+            const result = await API.toggleCheck(id);
+            if (result && result.isChecked) {
+                setTimeout(async () => { try { await API.deleteItem(id); } catch(e) {} }, 700);
             }
         } catch(e) { Utils.showToast('Failed to update item', true); }
     },

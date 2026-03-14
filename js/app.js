@@ -177,14 +177,14 @@ const App = {
         sortedAisles.forEach(aisle => {
             html += `<div class="shop-aisle-group">
                 <div class="shop-aisle-header">${Utils.escapeHtml(aisle.name)}</div>
-                ${grouped[aisle.id].map(item => this.renderShopItem(item)).join('')}
+                ${grouped[aisle.id].sort((a,b) => a.name.localeCompare(b.name)).map(item => this.renderShopItem(item)).join('')}
             </div>`;
         });
 
         if (noAisle.length) {
             html += `<div class="shop-aisle-group">
                 <div class="shop-aisle-header">Other</div>
-                ${noAisle.map(item => this.renderShopItem(item)).join('')}
+                ${noAisle.sort((a,b) => a.name.localeCompare(b.name)).map(item => this.renderShopItem(item)).join('')}
             </div>`;
         }
 
@@ -202,13 +202,15 @@ const App = {
 
     async toggleShopItem(id) {
         try {
-            await API.toggleCheck(id);
-            const item = API.items.find(i => i.id === id);
-            if (item && item.isChecked) {
+            const result = await API.toggleCheck(id);
+            // Use the response directly — don't wait for SSE
+            if (result && result.isChecked) {
+                this.renderShoppingModeList();
                 setTimeout(async () => {
-                    try { await API.deleteItem(id); } catch(e) {}
-                    this.renderShoppingModeList();
-                }, 600);
+                    try {
+                        await API.deleteItem(id);
+                    } catch(e) {}
+                }, 700);
             } else {
                 this.renderShoppingModeList();
             }

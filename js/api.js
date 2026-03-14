@@ -14,6 +14,11 @@ const API = {
     },
 
     connectSSE() {
+        // Close existing connection first
+        if (this.eventSource) {
+            this.eventSource.close();
+            this.eventSource = null;
+        }
         console.log('Connecting SSE...');
         this.eventSource = new EventSource('/events');
 
@@ -83,8 +88,16 @@ const API = {
 
         this.eventSource.onerror = () => {
             const badge = document.getElementById('connectionBadge');
-            if (badge) badge.textContent = '○ Offline';
-            setTimeout(() => this.connectSSE(), 5000);
+            if (badge) { badge.textContent = '○ Offline'; badge.style.color = 'rgba(255,255,255,0.5)'; }
+            this.eventSource.close();
+            this.eventSource = null;
+            // Reconnect after 3 seconds
+            setTimeout(() => this.connectSSE(), 3000);
+        };
+
+        this.eventSource.onopen = () => {
+            const badge = document.getElementById('connectionBadge');
+            if (badge) { badge.textContent = '● Live'; badge.style.color = ''; }
         };
     },
 
