@@ -42,8 +42,48 @@ const App = {
     init() {
         console.log('TrolleyMate initializing...');
         this.setupEventListeners();
+        this.showSplash();
         API.connectSSE();
         API.startKeepAlive();
+    },
+
+    showSplash() {
+        const splash = document.getElementById('splashScreen');
+        const storesContainer = document.getElementById('splashStores');
+        if (!splash) return;
+
+        // Pre-defined stores to show on splash
+        const stores = [
+            { name: 'Tesco',        color: '#005EA5', domain: 'tesco.com' },
+            { name: 'Iceland',      color: '#D61F26', domain: 'iceland.co.uk' },
+            { name: 'Lidl',         color: '#0050AA', domain: 'lidl.co.uk' },
+            { name: "Sainsbury's",  color: '#F47920', domain: 'sainsburys.co.uk' },
+            { name: 'B&M',          color: '#6B2D8B', domain: 'bmstores.co.uk' },
+            { name: 'Asda',         color: '#78BE20', domain: 'asda.com' },
+        ];
+
+        // Render store avatars with staggered animation delay
+        storesContainer.innerHTML = stores.map((store, i) => {
+            const initials = store.name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0,2);
+            return `
+                <div class="splash-store" style="animation-delay: ${0.4 + i * 0.12}s">
+                    <div class="splash-store-avatar" id="splash-avatar-${i}" style="background:white;">
+                        <img src="https://www.google.com/s2/favicons?domain=${store.domain}&sz=128"
+                            alt="${store.name}"
+                            onerror="document.getElementById('splash-avatar-${i}').style.background='${store.color}';document.getElementById('splash-avatar-${i}').innerHTML='<span style=\'font-size:18px;font-weight:800;color:white;\'>${initials}</span>';"
+                            style="width:36px;height:36px;object-fit:contain;border-radius:4px;">
+                    </div>
+                    <span class="splash-store-name">${store.name}</span>
+                </div>`;
+        }).join('');
+
+        // Dismiss after 2.5 seconds
+        setTimeout(() => {
+            splash.classList.add('fade-out');
+            setTimeout(() => {
+                splash.style.display = 'none';
+            }, 600);
+        }, 2500);
     },
 
     setupEventListeners() {
