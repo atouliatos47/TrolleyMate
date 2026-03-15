@@ -451,6 +451,21 @@ const server = http.createServer(async (req, res) => {
         return;
     }
 
+    // ===== ASSET LINKS (for TWA verification) =====
+    if (p.pathname === '/.well-known/assetlinks.json') {
+        const assetLinks = [{
+            "relation": ["delegate_permission/common.handle_all_urls"],
+            "target": {
+                "namespace": "android_app",
+                "package_name": "com.onrender.trolleymate.twa",
+                "sha256_cert_fingerprints": ["C6:09:97:89:D8:23:E0:B3:67:17:02:2D:30:C4:C6:1D:CB:3F:1C:42:0D:AD:32:ED:3F:1A:49:25:39:D1:54:8C"]
+            }
+        }];
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify(assetLinks));
+        return;
+    }
+
     // ===== PRICE LOOKUP =====
     if (p.pathname === '/prices' && req.method === 'GET') {
         const query = p.query.q;
@@ -460,22 +475,26 @@ const server = http.createServer(async (req, res) => {
             const https = require('https');
             const options = {
                 hostname: 'uk-supermarkets-product-pricing.p.rapidapi.com',
-                path: `/products/search?query=${encodeURIComponent(query)}&store=${encodeURIComponent(store)}&limit=5`,
+                path: `/search?query=${encodeURIComponent(query)}&retailer=${encodeURIComponent(store)}`,
                 method: 'GET',
                 headers: {
                     'x-rapidapi-host': 'uk-supermarkets-product-pricing.p.rapidapi.com',
                     'x-rapidapi-key': RAPIDAPI_KEY
                 }
             };
+            console.log('Price lookup:', options.path);
             const apiReq = https.request(options, (apiRes) => {
                 let data = '';
+                console.log('API status:', apiRes.statusCode);
                 apiRes.on('data', chunk => data += chunk);
                 apiRes.on('end', () => {
+                    console.log('API response:', data.slice(0, 300));
                     res.writeHead(200, { 'Content-Type': 'application/json' });
                     res.end(data);
                 });
             });
             apiReq.on('error', (e) => {
+                console.log('API error:', e.message);
                 res.writeHead(500);
                 res.end(JSON.stringify({ error: e.message }));
             });
