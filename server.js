@@ -5,6 +5,7 @@ const url = require('url');
 const { Pool } = require('pg');
 
 const PORT = process.env.PORT || 3000;
+const RAPIDAPI_KEY = process.env.RAPIDAPI_KEY || '8c10d16df5mshbd8d3d0cb4a58cap1da428jsn8828d2895de4';
 const APP_DIR = __dirname;
 
 // ===== DATABASE =====
@@ -447,6 +448,39 @@ const server = http.createServer(async (req, res) => {
             r.rows.forEach(row => broadcast('deleteItem', { id: row.id }));
             res.end(JSON.stringify({ deleted: r.rows.length }));
         } catch(e) { res.writeHead(400); res.end(JSON.stringify({ error: 'Invalid request' })); }
+        return;
+    }
+
+    // ===== PRICE LOOKUP =====
+    if (p.pathname === '/prices' && req.method === 'GET') {
+        const query = p.query.q;
+        const store = p.query.store || 'tesco';
+        if (!query) { res.writeHead(400); return res.end(JSON.stringify({ error: 'No query' })); }
+        try {
+            const https = require('https');
+            const options = {
+                hostname: 'uk-supermarkets-product-pricing.p.rapidapi.com',
+                path: `/products/search?query=${encodeURIComponent(query)}&store=${encodeURIComponent(store)}&limit=5`,
+                method: 'GET',
+                headers: {
+                    'x-rapidapi-host': 'uk-supermarkets-product-pricing.p.rapidapi.com',
+                    'x-rapidapi-key': RAPIDAPI_KEY
+                }
+            };
+            const apiReq = https.request(options, (apiRes) => {
+                let data = '';
+                apiRes.on('data', chunk => data += chunk);
+                apiRes.on('end', () => {
+                    res.writeHead(200, { 'Content-Type': 'application/json' });
+                    res.end(data);
+                });
+            });
+            apiReq.on('error', (e) => {
+                res.writeHead(500);
+                res.end(JSON.stringify({ error: e.message }));
+            });
+            apiReq.end();
+        } catch(e) { res.writeHead(500); res.end(JSON.stringify({ error: e.message })); }
         return;
     }
 

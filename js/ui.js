@@ -221,6 +221,7 @@ const UI = {
                         data-in-list="${inList}">
                         <span class="panel-chip-name">${Utils.escapeHtml(name)}</span>
                         <span class="panel-chip-badge ${inList ? 'in' : 'add'}">${inList ? '\u2713 In list' + (qty > 1 ? ' x' + qty : '') : '+ Add'}</span>
+                        <button class="chip-price-btn" onclick="event.stopPropagation(); UI.lookupPrice('${name.replace(/'/g, "\'")}', ${aisleId})" title="Check price">£</button>
                     </div>
                 </div>`;
             return `
@@ -259,6 +260,49 @@ const UI = {
                 if (id) UI.handlePanelProductLongPress(id, nm, aid);
             });
         });
+    },
+
+    async lookupPrice(name, aisleId) {
+        const store = API.stores.find(s => s.id === API.currentStoreId);
+        if (!store) return;
+
+        const modal = document.getElementById('modal');
+        const overlay = document.getElementById('modalOverlay');
+        modal.innerHTML = `
+            <h3>🔍 Price Lookup</h3>
+            <p class="modal-sub">Searching <strong>${Utils.escapeHtml(store.name)}</strong> for <strong>${Utils.escapeHtml(name)}</strong>...</p>
+            <div id="priceResults" style="margin-top:16px;">
+                <div style="text-align:center;padding:20px;color:#9ca3af;">⏳ Loading prices...</div>
+            </div>
+            <div class="modal-actions">
+                <button class="modal-btn cancel" onclick="Utils.closeModal()">Close</button>
+            </div>`;
+        overlay.classList.add('show');
+
+        try {
+            const storeName = store.name.toLowerCase().replace("'", '').replace('&', 'and').replace(' ', '-');
+            const r = await fetch(`/prices?q=${encodeURIComponent(name)}&store=${encodeURIComponent(storeName)}`);
+            const data = await r.json();
+
+            const results = document.getElementById('priceResults');
+            if (!data || !data.length) {
+                results.innerHTML = '<p style="color:#9ca3af;text-align:center;padding:16px;">No prices found for this product.</p>';
+                return;
+            }
+
+            results.innerHTML = data.slice(0, 5).map(item => `
+                <div style="display:flex;align-items:center;gap:12px;padding:12px;background:#f4f4f8;border-radius:12px;margin-bottom:8px;">
+                    ${item.image ? `<img src="${item.image}" style="width:48px;height:48px;object-fit:contain;border-radius:8px;background:white;">` : '<div style="width:48px;height:48px;background:#e5e7eb;border-radius:8px;"></div>'}
+                    <div style="flex:1;min-width:0;">
+                        <div style="font-size:13px;font-weight:600;color:#1a1a2e;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${Utils.escapeHtml(item.name || item.title || name)}</div>
+                        <div style="font-size:12px;color:#6b7280;margin-top:2px;">${item.size || item.weight || ''}</div>
+                    </div>
+                    <div style="font-size:18px;font-weight:800;color:var(--accent);flex-shrink:0;">£${parseFloat(item.price).toFixed(2)}</div>
+                </div>`).join('');
+        } catch(e) {
+            const results = document.getElementById('priceResults');
+            if (results) results.innerHTML = '<p style="color:#dc2626;text-align:center;padding:16px;">Failed to fetch prices. Try again later.</p>';
+        }
     },
 
     handlePanelProductLongPress(itemId, name, aisleId) {
