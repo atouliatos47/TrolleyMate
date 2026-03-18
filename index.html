@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -16,136 +17,144 @@
     <link rel="stylesheet" href="/css/style.css">
     <script>if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js');</script>
 </head>
+
 <body>
 
-<!-- ===== SPLASH SCREEN ===== -->
-<div id="splashScreen">
-    <div class="splash-logo">
-        <img src="/img/icon-192.png" alt="BasketMate" class="splash-icon">
-        <div class="splash-title">Basket<span>Mate</span></div>
-        <div class="splash-sub">Your smart shopping companion</div>
-    </div>
-    <div class="splash-stores" id="splashStores">
-        <!-- Store logos injected by JS -->
-    </div>
-    <div class="splash-loader">
-        <div class="splash-bar"></div>
-    </div>
-</div>
-
-<!-- ===== HOME SCREEN ===== -->
-<div id="homeScreen">
-
-    <div class="home-header">
-        <div class="home-title">🛒 BasketMate</div>
-        <div class="connection-badge" id="connectionBadge">○ Connecting</div>
-    </div>
-
-    <div class="home-content">
-        <p class="home-sub">Where are you shopping today?</p>
-        <div class="store-grid" id="storeGrid">
-            <!-- Store cards rendered here -->
+    <!-- ===== SPLASH SCREEN ===== -->
+    <div id="splashScreen">
+        <div class="splash-logo">
+            <img src="/img/icon-192.png" alt="BasketMate" class="splash-icon">
+            <div class="splash-title">Basket<span>Mate</span></div>
+            <div class="splash-sub">Your smart shopping companion</div>
+        </div>
+        <div class="splash-stores" id="splashStores">
+            <!-- Store logos injected by JS -->
+        </div>
+        <div class="splash-loader">
+            <div class="splash-bar"></div>
         </div>
     </div>
 
-</div>
+    <!-- ===== HOME SCREEN ===== -->
+    <div id="homeScreen">
 
-<!-- ===== STORE SCREEN ===== -->
-<div id="storeScreen" class="hidden">
+        <div class="home-header">
+            <div class="home-title">🛒 BasketMate</div>
+            <div class="connection-badge" id="connectionBadge">○ Connecting</div>
+        </div>
 
-    <div class="store-header">
-        <span class="store-title" id="storeTitle"></span>
-        <span class="stats-bar" id="statsBar"></span>
-        <button class="clear-btn-sm" onclick="App.clearChecked()">🗑 Clear</button>
-    </div>
-
-    <div class="main-layout">
-
-        <!-- LEFT: AISLES -->
-        <div class="aisles-panel">
-            <div class="panel-header">
-                <h2>🏪 Aisles</h2>
-                <span class="panel-sub">Tap an aisle to add products</span>
+        <div class="home-content">
+            <p class="home-sub">Where are you shopping today?</p>
+            <div class="store-grid" id="storeGrid">
+                <!-- Store cards rendered here -->
             </div>
-            <div class="aisles-container" id="aislesContainer"></div>
         </div>
 
-        <!-- RIGHT: TABS (Shopping List + Favourites) -->
-        <div class="list-panel">
-            <div class="panel-header">
-                <div class="list-tabs">
-                    <button class="list-tab active" id="tabList" onclick="UI.switchListTab('list')">📋 List</button>
-                    <button class="list-tab" id="tabFavs" onclick="UI.switchListTab('favs')">⭐ Favourites</button>
+    </div>
+
+    <!-- ===== STORE SCREEN ===== -->
+    <div id="storeScreen" class="hidden">
+
+        <div class="store-header">
+            <span class="store-title" id="storeTitle"></span>
+            <span class="stats-bar" id="statsBar"></span>
+            <button class="clear-btn-sm" onclick="App.clearChecked()">🗑 Clear</button>
+        </div>
+
+        <div class="main-layout">
+
+            <!-- LEFT: AISLES -->
+            <div class="aisles-panel">
+                <div class="panel-header">
+                    <h2>🏪 Aisles</h2>
+                    <span class="panel-sub">Tap an aisle to add products</span>
                 </div>
+                <div class="aisles-container" id="aislesContainer"></div>
             </div>
-            <div class="list-container" id="listContainer"></div>
-            <div class="list-container hidden" id="favouritesContainer"></div>
+
+            <!-- RIGHT: TABS (Shopping List + Favourites) -->
+            <div class="list-panel">
+                <div class="panel-header">
+                    <div class="list-tabs">
+                        <button class="list-tab active" id="tabList" onclick="UI.switchListTab('list')">📋 List</button>
+                        <button class="list-tab" id="tabFavs" onclick="UI.switchListTab('favs')">⭐ Favourites</button>
+                    </div>
+                </div>
+                <div class="list-container" id="listContainer"></div>
+                <div class="list-container hidden" id="favouritesContainer"></div>
+            </div>
+
         </div>
 
     </div>
 
-</div>
-
-<!-- ===== AISLE PANEL OVERLAY ===== -->
-<div class="aisle-panel-overlay" id="aislePanelOverlay">
-    <div class="aisle-panel">
-        <div class="aisle-panel-header">
-            <span class="aisle-panel-title" id="aislePanelTitle"></span>
+    <!-- ===== AISLE PANEL OVERLAY ===== -->
+    <div class="aisle-panel-overlay" id="aislePanelOverlay">
+        <div class="aisle-panel">
+            <div class="aisle-panel-header">
+                <span class="aisle-panel-title" id="aislePanelTitle"></span>
+            </div>
+            <div class="aisle-panel-products" id="aislePanelProducts"></div>
         </div>
-        <div class="aisle-panel-products" id="aislePanelProducts"></div>
     </div>
-</div>
 
-<!-- ===== MODAL ===== -->
-<div class="modal-overlay" id="modalOverlay">
-    <div class="modal" id="modal"></div>
-</div>
-
-<!-- ===== BOTTOM NAV ===== -->
-<div class="bottom-nav" id="bottomNav">
-    <!-- HOME SCREEN NAV -->
-    <div class="nav-home-screen" id="navHomeScreen">
-        <button class="nav-btn-add" onclick="App.showAddStore()">
-            <div class="nav-icon-wrap">➕</div>
-            <span class="nav-label">Add Store</span>
-        </button>
-        <button class="nav-btn-home" onclick="App.smartHome()">
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
-                <path d="M3 9.5L12 3L21 9.5V20C21 20.55 20.55 21 20 21H15V15H9V21H4C3.45 21 3 20.55 3 20V9.5Z" fill="white"/>
-            </svg>
-        </button>
+    <!-- ===== MODAL ===== -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal" id="modal"></div>
     </div>
-    <!-- STORE SCREEN NAV -->
-    <div class="nav-store-screen hidden" id="navStoreScreen">
-        <button class="nav-btn-shop" id="navBtnShop" onclick="App.openShoppingMode()">
-            <div class="nav-icon-wrap">🛒</div>
-            <span class="nav-label">My List</span>
-        </button>
-        <button class="nav-btn-home" onclick="App.smartHome()">
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
-                <path d="M3 9.5L12 3L21 9.5V20C21 20.55 20.55 21 20 21H15V15H9V21H4C3.45 21 3 20.55 3 20V9.5Z" fill="white"/>
-            </svg>
-        </button>
-    </div>
-</div>
 
-<!-- ===== SHOPPING MODE (full screen list) ===== -->
-<div class="shopping-mode-overlay hidden" id="shoppingModeOverlay">
-    <div class="shopping-mode-header">
-        <div class="shopping-mode-header-top">
-            <span class="shopping-mode-label">🛒 Shopping List</span>
-            <span class="shopping-mode-stats" id="shoppingModeStats"></span>
+    <!-- ===== BOTTOM NAV ===== -->
+    <div class="bottom-nav" id="bottomNav">
+        <!-- HOME SCREEN NAV -->
+        <div class="nav-home-screen" id="navHomeScreen">
+            <button class="nav-btn-add" onclick="App.showAddStore()">
+                <div class="nav-icon-wrap">➕</div>
+                <span class="nav-label">Add Store</span>
+            </button>
+            <button class="nav-btn-home" onclick="App.smartHome()">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+                    <path d="M3 9.5L12 3L21 9.5V20C21 20.55 20.55 21 20 21H15V15H9V21H4C3.45 21 3 20.55 3 20V9.5Z"
+                        fill="white" />
+                </svg>
+            </button>
+            <button class="nav-btn-add" onclick="App.showMyCode()">
+                <div class="nav-icon-wrap">🏠</div>
+                <span class="nav-label">My Code</span>
+            </button>
         </div>
-        <span class="shopping-mode-title" id="shoppingModeTitle"></span>
+        <!-- STORE SCREEN NAV -->
+        <div class="nav-store-screen hidden" id="navStoreScreen">
+            <button class="nav-btn-shop" id="navBtnShop" onclick="App.openShoppingMode()">
+                <div class="nav-icon-wrap">🛒</div>
+                <span class="nav-label">My List</span>
+            </button>
+            <button class="nav-btn-home" onclick="App.smartHome()">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+                    <path d="M3 9.5L12 3L21 9.5V20C21 20.55 20.55 21 20 21H15V15H9V21H4C3.45 21 3 20.55 3 20V9.5Z"
+                        fill="white" />
+                </svg>
+            </button>
+        </div>
     </div>
-    <div class="shopping-mode-list" id="shoppingModeList"></div>
-</div>
 
-<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
+    <!-- ===== SHOPPING MODE (full screen list) ===== -->
+    <div class="shopping-mode-overlay hidden" id="shoppingModeOverlay">
+        <div class="shopping-mode-header">
+            <div class="shopping-mode-header-top">
+                <span class="shopping-mode-label">🛒 Shopping List</span>
+                <span class="shopping-mode-stats" id="shoppingModeStats"></span>
+            </div>
+            <span class="shopping-mode-title" id="shoppingModeTitle"></span>
+        </div>
+        <div class="shopping-mode-list" id="shoppingModeList"></div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
     <script src="/js/utils.js"></script>
-<script src="/js/api.js"></script>
-<script src="/js/ui.js"></script>
-<script src="/js/app.js"></script>
+    <script src="/js/api.js"></script>
+    <script src="/js/ui.js"></script>
+    <script src="/js/app.js"></script>
 
 </body>
+
 </html>
