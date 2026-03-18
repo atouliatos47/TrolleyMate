@@ -100,6 +100,7 @@ async function initDb() {
     await pool.query(`ALTER TABLE aisles ADD COLUMN IF NOT EXISTS household_id INTEGER REFERENCES households(id) ON DELETE CASCADE`);
     await pool.query(`ALTER TABLE items ADD COLUMN IF NOT EXISTS household_id INTEGER REFERENCES households(id) ON DELETE CASCADE`);
     await pool.query(`ALTER TABLE favourites ADD COLUMN IF NOT EXISTS household_id INTEGER REFERENCES households(id) ON DELETE CASCADE`);
+    await pool.query(`ALTER TABLE favourites ALTER COLUMN aisle_id DROP NOT NULL`);
 
     // Seed global stores if empty
     const { rows } = await pool.query('SELECT COUNT(*) FROM stores');
@@ -287,6 +288,38 @@ const server = http.createServer(async (req, res) => {
         const r = await pool.query('SELECT * FROM stores ORDER BY sort_order ASC');
         res.writeHead(200);
         res.end(JSON.stringify(r.rows.map(mapStore)));
+        return;
+    }
+
+    // ===== ADD AISLE =====
+    if (p.pathname === '/aisles' && req.method === 'POST') {
+        try {
+            const b = await getBody(req);
+            const householdId = parseInt(b.householdId);
+            if (!householdId) { res.writeHead(400); return res.end(JSON.stringify({ error: 'householdId required' })); }
+            const r = await pool.query(
+                'INSERT INTO aisles (household_id, store_id, name, sort_order, products) VALUES ($1,$2,$3,$4,$5) RETURNING *',
+                [householdId, b.storeId, b.name, b.sortOrder || 0, JSON.stringify([])]
+            );
+            const aisle = mapAisle(r.rows[0]);
+            broadcast(householdId, 'newAisle', aisle);
+            res.writeHead(201);
+            res.end(JSON.stringify(aisle));
+        } catch (e) { res.writeHead(400); res.end(JSON.stringify({ error: 'Invalid request' })); }
+        return;
+    }
+
+    // ===== REORDER AISLES =====
+    if (p.pathname === '/aisles/reorder' && req.method === 'POST') {
+        try {
+            const b = await getBody(req);
+            const householdId = parseInt(b.householdId);
+            if (!householdId) { res.writeHead(400); return res.end(JSON.stringify({ error: 'householdId required' })); }
+            for (let i = 0; i < b.order.length; i++) {
+                await pool.query('UPDATE aisles SET sort_order=$1 WHERE id=$2 AND household_id=$3', [i, b.order[i], householdId]);
+            }
+            res.end(JSON.stringify({ success: true }));
+        } catch (e) { res.writeHead(400); res.end(JSON.stringify({ error: 'Invalid request' })); }
         return;
     }
 
@@ -488,7 +521,7 @@ const server = http.createServer(async (req, res) => {
                 `INSERT INTO favourites (household_id, store_id, aisle_id, name)
                  VALUES ($1,$2,$3,$4)
                  ON CONFLICT (household_id, store_id, name) DO NOTHING RETURNING *`,
-                [householdId, b.storeId, b.aisleId, b.name]
+                [householdId, b.storeId, b.aisleId || null, b.name]
             );
             res.writeHead(201);
             res.end(JSON.stringify(r.rows[0] || {}));
