@@ -315,8 +315,10 @@ const server = http.createServer(async (req, res) => {
             const b = await getBody(req);
             const householdId = parseInt(b.householdId);
             if (!householdId) { res.writeHead(400); return res.end(JSON.stringify({ error: 'householdId required' })); }
-            for (let i = 0; i < b.order.length; i++) {
-                await pool.query('UPDATE aisles SET sort_order=$1 WHERE id=$2 AND household_id=$3', [i, b.order[i], householdId]);
+            for (const item of b.order) {
+                const id = item.id || item;
+                const sortOrder = item.sortOrder !== undefined ? item.sortOrder : b.order.indexOf(item);
+                await pool.query('UPDATE aisles SET sort_order=$1 WHERE id=$2 AND household_id=$3', [sortOrder, id, householdId]);
             }
             res.end(JSON.stringify({ success: true }));
         } catch (e) { res.writeHead(400); res.end(JSON.stringify({ error: 'Invalid request' })); }
