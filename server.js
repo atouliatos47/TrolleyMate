@@ -530,8 +530,10 @@ const server = http.createServer(async (req, res) => {
                 'INSERT INTO favourites (household_id, store_id, aisle_id, name) VALUES ($1,$2,$3,$4) RETURNING *',
                 [householdId, b.storeId, b.aisleId || null, b.name]
             );
+            const fav = r.rows[0] || {};
+            broadcast(householdId, 'newFavourite', fav);
             res.writeHead(201);
-            res.end(JSON.stringify(r.rows[0] || {}));
+            res.end(JSON.stringify(fav));
         } catch (e) {
             console.error('Add favourite error:', e);
             res.writeHead(400);

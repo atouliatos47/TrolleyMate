@@ -146,12 +146,14 @@ const API = {
                 this.favourites.push(fav);
             }
             if (UI.currentAislePanel) UI.renderAislePanelProducts(UI.currentAislePanel);
+            UI.renderFavourites();
         });
 
         this.eventSource.addEventListener('deleteFavourite', (e) => {
             const { storeId, name } = JSON.parse(e.data);
             this.favourites = this.favourites.filter(f => !(f.store_id === storeId && f.name === name));
             if (UI.currentAislePanel) UI.renderAislePanelProducts(UI.currentAislePanel);
+            UI.renderFavourites();
         });
 
         this.eventSource.onerror = () => {
