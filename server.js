@@ -517,15 +517,26 @@ const server = http.createServer(async (req, res) => {
             const b = await getBody(req);
             const householdId = parseInt(b.householdId);
             if (!householdId) { res.writeHead(400); return res.end(JSON.stringify({ error: 'householdId required' })); }
+            // Use INSERT ... WHERE NOT EXISTS to avoid conflict clause issues
+            const existing = await pool.query(
+                'SELECT id FROM favourites WHERE household_id=$1 AND store_id=$2 AND name=$3',
+                [householdId, b.storeId, b.name]
+            );
+            if (existing.rows.length > 0) {
+                res.writeHead(201);
+                return res.end(JSON.stringify(existing.rows[0]));
+            }
             const r = await pool.query(
-                `INSERT INTO favourites (household_id, store_id, aisle_id, name)
-                 VALUES ($1,$2,$3,$4)
-                 ON CONFLICT (household_id, store_id, name) DO NOTHING RETURNING *`,
+                'INSERT INTO favourites (household_id, store_id, aisle_id, name) VALUES ($1,$2,$3,$4) RETURNING *',
                 [householdId, b.storeId, b.aisleId || null, b.name]
             );
             res.writeHead(201);
             res.end(JSON.stringify(r.rows[0] || {}));
-        } catch (e) { res.writeHead(400); res.end(JSON.stringify({ error: 'Invalid request' })); }
+        } catch (e) {
+            console.error('Add favourite error:', e);
+            res.writeHead(400);
+            res.end(JSON.stringify({ error: e.message }));
+        }
         return;
     }
 
