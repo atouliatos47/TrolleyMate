@@ -315,6 +315,8 @@ const App = {
     },
 
     // ===== SHOPPING MODE =====
+    openShoppingMode() { this.enterShoppingMode(); },
+
     enterShoppingMode() {
         const overlay = document.getElementById('shoppingModeOverlay');
         if (!overlay) return;

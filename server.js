@@ -496,6 +496,22 @@ const server = http.createServer(async (req, res) => {
         return;
     }
 
+    // ===== FAVOURITES — DELETE =====
+    if (p.pathname === '/favourites/delete' && req.method === 'POST') {
+        try {
+            const b = await getBody(req);
+            const householdId = parseInt(b.householdId);
+            if (!householdId) { res.writeHead(400); return res.end(JSON.stringify({ error: 'householdId required' })); }
+            await pool.query(
+                'DELETE FROM favourites WHERE household_id=$1 AND store_id=$2 AND name=$3',
+                [householdId, b.storeId, b.name]
+            );
+            broadcast(householdId, 'deleteFavourite', { storeId: b.storeId, name: b.name });
+            res.end(JSON.stringify({ success: true }));
+        } catch (e) { res.writeHead(400); res.end(JSON.stringify({ error: 'Invalid request' })); }
+        return;
+    }
+
     // ===== ASSET LINKS (for TWA / Play Store verification) =====
     if (p.pathname === '/.well-known/assetlinks.json') {
         const assetLinks = [{
