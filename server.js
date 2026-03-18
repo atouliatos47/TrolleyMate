@@ -3,10 +3,18 @@ const fs = require('fs').promises;
 const path = require('path');
 const url = require('url');
 const { Pool } = require('pg');
+const webpush = require('web-push');
 
 const PORT = process.env.PORT || 3000;
 const RAPIDAPI_KEY = process.env.RAPIDAPI_KEY || '';
 const APP_DIR = __dirname;
+
+// ===== WEB PUSH =====
+webpush.setVapidDetails(
+    process.env.VAPID_EMAIL,
+    process.env.VAPID_PUBLIC_KEY,
+    process.env.VAPID_PRIVATE_KEY
+);
 
 // ===== DATABASE =====
 const pool = new Pool({
@@ -93,6 +101,17 @@ async function initDb() {
             aisle_id INTEGER REFERENCES aisles(id) ON DELETE CASCADE,
             name TEXT NOT NULL,
             UNIQUE(household_id, store_id, name)
+        )
+    `);
+
+    // Push subscriptions table
+    await pool.query(`
+        CREATE TABLE IF NOT EXISTS push_subscriptions (
+            id SERIAL PRIMARY KEY,
+            household_id INTEGER REFERENCES households(id) ON DELETE CASCADE,
+            endpoint TEXT NOT NULL UNIQUE,
+            subscription JSONB NOT NULL,
+            created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
         )
     `);
 
@@ -291,6 +310,35 @@ const server = http.createServer(async (req, res) => {
         return;
     }
 
+    // ===== PUSH — GET VAPID PUBLIC KEY =====
+    if (p.pathname === '/push/vapid-key' && req.method === 'GET') {
+        res.writeHead(200);
+        res.end(JSON.stringify({ publicKey: process.env.VAPID_PUBLIC_KEY }));
+        return;
+    }
+
+    // ===== PUSH — SUBSCRIBE =====
+    if (p.pathname === '/push/subscribe' && req.method === 'POST') {
+        try {
+            const b = await getBody(req);
+            const householdId = parseInt(b.householdId);
+            if (!householdId) { res.writeHead(400); return res.end(JSON.stringify({ error: 'householdId required' })); }
+            await pool.query(
+                `INSERT INTO push_subscriptions (household_id, endpoint, subscription)
+                 VALUES ($1,$2,$3)
+                 ON CONFLICT (endpoint) DO UPDATE SET subscription=$3, household_id=$1`,
+                [householdId, b.subscription.endpoint, JSON.stringify(b.subscription)]
+            );
+            res.writeHead(201);
+            res.end(JSON.stringify({ success: true }));
+        } catch (e) {
+            console.error('Subscribe error:', e);
+            res.writeHead(500);
+            res.end(JSON.stringify({ error: 'Failed to subscribe' }));
+        }
+        return;
+    }
+
     // ===== ADD AISLE =====
     if (p.pathname === '/aisles' && req.method === 'POST') {
         try {
@@ -415,6 +463,28 @@ const server = http.createServer(async (req, res) => {
             );
             const item = mapItem(r.rows[0]);
             broadcast(householdId, 'newItem', item);
+
+            // Send push to other household members
+            const store = (await pool.query('SELECT name FROM stores WHERE id=$1', [b.storeId])).rows[0];
+            const storeName = store ? store.name : 'your list';
+            const subs = await pool.query(
+                'SELECT subscription FROM push_subscriptions WHERE household_id=$1 AND endpoint != $2',
+                [householdId, b.senderEndpoint || '']
+            );
+            const payload = JSON.stringify({
+                title: `${b.name} added to ${storeName}`,
+                body: `Someone added ${b.name} to the shopping list`,
+                icon: '/img/icon-192.png'
+            });
+            subs.rows.forEach(row => {
+                webpush.sendNotification(row.subscription, payload).catch(err => {
+                    if (err.statusCode === 410) {
+                        // Subscription expired — remove it
+                        pool.query('DELETE FROM push_subscriptions WHERE endpoint=$1', [row.subscription.endpoint]).catch(() => {});
+                    }
+                });
+            });
+
             res.writeHead(201);
             res.end(JSON.stringify(item));
         } catch (e) { res.writeHead(400); res.end(JSON.stringify({ error: 'Invalid request' })); }

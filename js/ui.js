@@ -141,6 +141,17 @@ const UI = {
             chosenClass: 'aisle-drag-chosen',
             forceFallback: false,
             onEnd: async (evt) => {
+                // Force cleanup of any lingering drag ghost (iOS fix)
+                if (evt.item) {
+                    evt.item.style.transform = '';
+                    evt.item.style.opacity = '1';
+                }
+                document.querySelectorAll('.aisle-drag-ghost, .aisle-drag-chosen, .sortable-ghost, .sortable-chosen').forEach(el => {
+                    el.classList.remove('aisle-drag-ghost', 'aisle-drag-chosen', 'sortable-ghost', 'sortable-chosen');
+                    el.style.transform = '';
+                    el.style.opacity = '1';
+                });
+
                 // Build new sort order from current DOM
                 const cards = container.querySelectorAll('.aisle-card');
                 const order = Array.from(cards).map((card, index) => ({

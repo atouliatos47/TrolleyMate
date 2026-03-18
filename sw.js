@@ -1,4 +1,4 @@
-const CACHE_NAME = 'basketmate-v7';
+const CACHE_NAME = 'basketmate-v8';
 const STATIC_ASSETS = [
     '/',
     '/index.html',
@@ -38,7 +38,11 @@ self.addEventListener('fetch', e => {
     // Skip SSE and API calls — always network
     if (url.includes('/events') ||
         url.includes('/items') ||
-        url.includes('/aisles')) {
+        url.includes('/aisles') ||
+        url.includes('/push') ||
+        url.includes('/households') ||
+        url.includes('/favourites') ||
+        url.includes('/stores')) {
         return;
     }
 
@@ -52,8 +56,35 @@ self.addEventListener('fetch', e => {
         return;
     }
 
-    // Network-first for everything else (HTML, navigation)
+    // Network-first for everything else
     e.respondWith(
         fetch(e.request).catch(() => caches.match(e.request))
+    );
+});
+
+// ===== PUSH NOTIFICATIONS =====
+self.addEventListener('push', e => {
+    if (!e.data) return;
+    const data = e.data.json();
+    e.waitUntil(
+        self.registration.showNotification(data.title || 'BasketMate', {
+            body: data.body || 'Your shopping list was updated',
+            icon: '/img/icon-192.png',
+            badge: '/img/icon-192.png',
+            tag: 'basketmate-update',
+            renotify: true,
+            data: { url: '/' }
+        })
+    );
+});
+
+// Open app when notification tapped
+self.addEventListener('notificationclick', e => {
+    e.notification.close();
+    e.waitUntil(
+        clients.matchAll({ type: 'window', includeUncontrolled: true }).then(clientList => {
+            if (clientList.length > 0) return clientList[0].focus();
+            return clients.openWindow('/');
+        })
     );
 });

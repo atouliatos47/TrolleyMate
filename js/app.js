@@ -50,6 +50,7 @@ const App = {
             }, 1800);
             API.connectSSE();
             API.startKeepAlive();
+            setTimeout(() => this.setupPushNotifications(), 4000);
         } else {
             // New user — show household setup after splash
             setTimeout(() => this.showHouseholdSetup(), 2200);
@@ -198,12 +199,53 @@ const App = {
     startApp() {
         const overlay = document.getElementById('modalOverlay');
         overlay.classList.remove('show');
-        // Restore click-outside-to-close behaviour
         overlay.addEventListener('click', (e) => {
             if (e.target === overlay) Utils.closeModal();
         });
         API.connectSSE();
         API.startKeepAlive();
+        // Request push notification permission after a short delay
+        setTimeout(() => this.setupPushNotifications(), 3000);
+    },
+
+    async setupPushNotifications() {
+        if (!('Notification' in window) || !('serviceWorker' in navigator)) return;
+        if (Notification.permission === 'denied') return;
+
+        try {
+            const permission = await Notification.requestPermission();
+            if (permission !== 'granted') return;
+
+            const reg = await navigator.serviceWorker.ready;
+
+            // Get VAPID public key from server
+            const r = await fetch('/push/vapid-key');
+            const { publicKey } = await r.json();
+
+            // Subscribe
+            const subscription = await reg.pushManager.subscribe({
+                userVisibleOnly: true,
+                applicationServerKey: this.urlBase64ToUint8Array(publicKey)
+            });
+
+            // Save subscription to server
+            await fetch('/push/subscribe', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ subscription, householdId: API.householdId })
+            });
+
+            console.log('Push notifications enabled!');
+        } catch(e) {
+            console.log('Push setup failed:', e);
+        }
+    },
+
+    urlBase64ToUint8Array(base64String) {
+        const padding = '='.repeat((4 - base64String.length % 4) % 4);
+        const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+        const rawData = window.atob(base64);
+        return new Uint8Array([...rawData].map(c => c.charCodeAt(0)));
     },
 
     showOnboarding() {
