@@ -322,6 +322,20 @@ const server = http.createServer(async (req, res) => {
         return;
     }
 
+    // ===== DELETE AISLE =====
+    const delAisleMatch = p.pathname.match(/^\/aisles\/(\d+)\/delete$/);
+    if (delAisleMatch && req.method === 'POST') {
+        try {
+            const b = await getBody(req);
+            const householdId = parseInt(b.householdId);
+            const id = parseInt(delAisleMatch[1]);
+            await pool.query('DELETE FROM aisles WHERE id=$1 AND household_id=$2', [id, householdId]);
+            broadcast(householdId, 'deleteAisle', { id });
+            res.end(JSON.stringify({ success: true }));
+        } catch (e) { res.writeHead(400); res.end(JSON.stringify({ error: 'Invalid request' })); }
+        return;
+    }
+
     // ===== DELETE PRODUCT FROM AISLE =====
     const delProductMatch = p.pathname.match(/^\/aisles\/(\d+)\/products\/delete$/);
     if (delProductMatch && req.method === 'POST') {

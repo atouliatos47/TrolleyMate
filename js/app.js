@@ -43,7 +43,11 @@ const App = {
         // Check if household already saved
         const hasHousehold = API.loadHousehold();
         if (hasHousehold) {
-            // Returning user — connect straight away
+            // Returning user — dismiss splash then connect
+            setTimeout(() => {
+                const splash = document.getElementById('splashScreen');
+                if (splash) { splash.classList.add('fade-out'); setTimeout(() => { splash.style.display = 'none'; }, 600); }
+            }, 1800);
             API.connectSSE();
             API.startKeepAlive();
         } else {
@@ -293,6 +297,8 @@ const App = {
 
         document.getElementById('homeScreen').classList.add('hidden');
         document.getElementById('storeScreen').classList.remove('hidden');
+        document.getElementById('navHomeScreen').classList.add('hidden');
+        document.getElementById('navStoreScreen').classList.remove('hidden');
 
         this.requestWakeLock();
         UI.renderAisles();
@@ -303,6 +309,8 @@ const App = {
         API.currentStoreId = null;
         document.getElementById('storeScreen').classList.add('hidden');
         document.getElementById('homeScreen').classList.remove('hidden');
+        document.getElementById('navStoreScreen').classList.add('hidden');
+        document.getElementById('navHomeScreen').classList.remove('hidden');
         this.releaseWakeLock();
     },
 
