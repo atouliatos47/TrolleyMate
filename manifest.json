@@ -2,7 +2,7 @@
     "id": "https://trolleymate.onrender.com/",
     "name": "BasketMate",
     "short_name": "BasketMate",
-    "description": "Tesco aisle-sorted shopping list",
+    "description": "Aisle-sorted shopping list for major UK supermarkets"
     "start_url": "/",
     "scope": "/",
     "display": "standalone",
