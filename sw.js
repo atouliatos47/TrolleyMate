@@ -1,4 +1,4 @@
-const CACHE_NAME = 'basketmate-v8';
+const CACHE_NAME = 'basketmate-v9';
 const STATIC_ASSETS = [
     '/',
     '/index.html',
@@ -16,7 +16,9 @@ const STATIC_ASSETS = [
 // Install — cache all static assets
 self.addEventListener('install', e => {
     e.waitUntil(
-        caches.open(CACHE_NAME).then(cache => cache.addAll(STATIC_ASSETS))
+        caches.open(CACHE_NAME).then(cache => 
+            Promise.allSettled(STATIC_ASSETS.map(url => cache.add(url).catch(() => {})))
+        )
     );
     self.skipWaiting();
 });
