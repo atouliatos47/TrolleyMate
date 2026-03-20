@@ -101,10 +101,27 @@ Object.assign(App, {
         </div>`;
     },
 
+    playPing() {
+        try {
+            const ctx = new (window.AudioContext || window.webkitAudioContext)();
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.frequency.setValueAtTime(880, ctx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(1200, ctx.currentTime + 0.1);
+            gain.gain.setValueAtTime(0.3, ctx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3);
+            osc.start(ctx.currentTime);
+            osc.stop(ctx.currentTime + 0.3);
+        } catch(e) {}
+    },
+
     async toggleShopItem(id) {
         try {
             const result = await API.toggleCheck(id);
             if (result && result.isChecked) {
+                this.playPing();
                 const idx = API.items.findIndex(i => i.id === id);
                 if (idx !== -1) API.items[idx].isChecked = true;
                 this.renderShoppingModeList();
