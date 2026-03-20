@@ -1523,6 +1523,25 @@ body {
     to   { opacity: 1; transform: translateY(0) scale(1); }
 }
 
+.splash-brand {
+    position: absolute;
+    bottom: 24px;
+    left: 0;
+    right: 0;
+    text-align: center;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: #9ca3af;
+    opacity: 0;
+    animation: splashLogoIn 0.7s ease 1s forwards;
+}
+
+.splash-brand span {
+    color: #0D9488;
+}
+
 
 
 /* ===== CHIP FAV BUTTON ===== */
