@@ -1799,3 +1799,10 @@ body {
 .help-icon { font-size: 24px; flex-shrink: 0; width: 32px; text-align: center; }
 .help-title { font-size: 14px; font-weight: 700; color: #1a1a2e; margin-bottom: 4px; }
 .help-text { font-size: 13px; color: #6b7280; line-height: 1.5; }
+
+/* ===== SHOPPING MODE STORE HEADER ===== */
+.shop-store-header {
+    padding: 12px 16px;
+    margin: 8px 0 0;
+    border-radius: 10px 10px 0 0;
+}
