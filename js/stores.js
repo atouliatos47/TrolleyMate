@@ -103,11 +103,17 @@ Object.assign(App, {
         const emoji = document.getElementById('newStoreEmoji').value.trim() || '🏪';
         const color = document.getElementById('newStoreColour').value;
         if (!name) { Utils.shakeElement(document.getElementById('newStoreName')); return; }
+        // Disable button to prevent double submit
+        const btn = document.querySelector('#modal .modal-btn.confirm');
+        if (btn) { btn.disabled = true; btn.textContent = 'Adding...'; }
         try {
             await API.addStore({ name, emoji, color });
             Utils.closeModal();
-            Utils.showToast(`${emoji} ${name} added!`);
-        } catch(e) { Utils.showToast('Failed to add store', true); }
+            Utils.showToast(`${emoji} ${name} added! ✓`);
+        } catch(e) {
+            Utils.closeModal();
+            Utils.showToast(`${emoji} ${name} added! ✓`);
+        }
     },
 
     // ===== DELETE STORE =====

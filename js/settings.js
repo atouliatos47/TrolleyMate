@@ -128,7 +128,7 @@ Object.assign(App, {
                     <div class="help-icon">🔔</div>
                     <div>
                         <div class="help-title">Notifications</div>
-                        <div class="help-text">When a family member adds something to the list, you'll get a notification — even if the app is closed.</div>
+                        <div class="help-text">Notifications only arrive when you have <strong>My List</strong> open. This way you won't be disturbed while building your list at home — only the shopper in the supermarket gets alerted when a family member adds something.</div>
                     </div>
                 </div>
 
