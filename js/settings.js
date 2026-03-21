@@ -76,6 +76,10 @@ Object.assign(App, {
     // ===== HOUSEHOLD CODE =====
     showMyCode() {
         this.closeSettings();
+        if (!API.hasFullAccess) {
+            App.showUpgradePrompt('Household sharing is a BasketMate Family feature. Upgrade to share your list with family in real time.');
+            return;
+        }
         const modal = document.getElementById('modal');
         const overlay = document.getElementById('modalOverlay');
         modal.innerHTML = `
@@ -94,6 +98,10 @@ Object.assign(App, {
     // ===== SWITCH HOUSEHOLD =====
     showSwitchHousehold() {
         this.closeSettings();
+        if (!API.hasFullAccess) {
+            App.showUpgradePrompt('Household sharing is a BasketMate Family feature. Upgrade to join and share lists with your family.');
+            return;
+        }
         const modal = document.getElementById('modal');
         const overlay = document.getElementById('modalOverlay');
         modal.innerHTML = `
