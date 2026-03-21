@@ -105,6 +105,8 @@ const API = {
             // Load trial start from localStorage (set when household was created)
             this.trialStartedAt = localStorage.getItem('bm_trial_started');
             console.log('Init:', this.stores.length, 'stores,', this.aisles.length, 'aisles,', this.items.length, 'items', '| Premium:', this.isPremium, '| Trial days left:', this.trialDaysLeft);
+            // Apply free tier restrictions if trial expired
+            if (!this.hasFullAccess) this.applyFreeTierRestrictions();
             UI.renderHome();
             UI.renderTrialBanner();
             const badge = document.getElementById('connectionBadge');
@@ -347,6 +349,45 @@ const API = {
         });
         if (!r.ok) throw new Error('Failed to clear checked');
         return await r.json();
+    },
+
+    applyFreeTierRestrictions() {
+        const FREE_STORES = ['tesco', 'asda', 'lidl'];
+        const FREE_AISLE_LIMIT = 5;
+        const FREE_PRODUCT_LIMIT = 8;
+
+        // 1. Keep only the 3 free stores (by name match)
+        const allowedStores = this.stores.filter(s => FREE_STORES.includes(s.name.toLowerCase()));
+        const allowedStoreIds = allowedStores.map(s => s.id);
+
+        // If none of the free stores exist, just keep the first 3
+        if (allowedStores.length === 0) {
+            this.stores = this.stores.slice(0, 3);
+        } else {
+            this.stores = allowedStores;
+        }
+
+        // 2. Filter aisles to only allowed stores, max 5 per store
+        const aislesByStore = {};
+        this.aisles.forEach(a => {
+            if (!allowedStoreIds.includes(a.storeId)) return;
+            if (!aislesByStore[a.storeId]) aislesByStore[a.storeId] = [];
+            if (aislesByStore[a.storeId].length < FREE_AISLE_LIMIT) {
+                aislesByStore[a.storeId].push(a);
+            }
+        });
+        this.aisles = Object.values(aislesByStore).flat();
+
+        // 3. Trim products to max 8 per aisle
+        this.aisles = this.aisles.map(a => ({
+            ...a,
+            products: (a.products || []).slice(0, FREE_PRODUCT_LIMIT)
+        }));
+
+        // 4. Filter items to only allowed stores
+        this.items = this.items.filter(i => allowedStoreIds.includes(i.storeId));
+
+        console.log('Free tier applied:', this.stores.length, 'stores,', this.aisles.length, 'aisles');
     },
 
     async verifyPurchase(purchaseToken) {
