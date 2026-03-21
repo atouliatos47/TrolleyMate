@@ -1,29 +1,30 @@
-const CACHE_NAME = 'basketmate-v9';
+const CACHE_NAME = 'basketmate-v10';
 const STATIC_ASSETS = [
     '/',
     '/index.html',
     '/manifest.json',
     '/css/style.css',
-    '/js/app.js',
+    '/js/utils.js',
     '/js/api.js',
     '/js/ui.js',
-    '/js/utils.js',
-    '/img/logo.png',
+    '/js/app.js',
+    '/js/stores.js',
+    '/js/shopping.js',
+    '/js/settings.js',
     '/img/icon-192.png',
-    '/img/icon-512.png'
+    '/img/icon-512.png',
+    '/img/atstudios-logo.jpg'
 ];
 
-// Install — cache all static assets
 self.addEventListener('install', e => {
     e.waitUntil(
-        caches.open(CACHE_NAME).then(cache => 
+        caches.open(CACHE_NAME).then(cache =>
             Promise.allSettled(STATIC_ASSETS.map(url => cache.add(url).catch(() => {})))
         )
     );
     self.skipWaiting();
 });
 
-// Activate — remove old caches
 self.addEventListener('activate', e => {
     e.waitUntil(
         caches.keys().then(keys =>
@@ -33,25 +34,32 @@ self.addEventListener('activate', e => {
     self.clients.claim();
 });
 
-// Fetch strategy
 self.addEventListener('fetch', e => {
     const url = e.request.url;
 
-    // Skip SSE and API calls — always network
-    if (url.includes('/events') ||
-        url.includes('/items') ||
-        url.includes('/aisles') ||
-        url.includes('/push') ||
-        url.includes('/households') ||
-        url.includes('/favourites') ||
-        url.includes('/stores')) {
+    // Always network for API/SSE
+    if (url.includes('/events') || url.includes('/items') || url.includes('/aisles') ||
+        url.includes('/push') || url.includes('/households') ||
+        url.includes('/favourites') || url.includes('/stores')) {
         return;
     }
 
-    // Cache-first for static assets
-    if (e.request.destination === 'style' ||
-        e.request.destination === 'script' ||
-        e.request.destination === 'image') {
+    // Network-first for JS and HTML — always gets fresh code on deploy
+    if (e.request.destination === 'script' || e.request.destination === 'document') {
+        e.respondWith(
+            fetch(e.request)
+                .then(response => {
+                    const clone = response.clone();
+                    caches.open(CACHE_NAME).then(cache => cache.put(e.request, clone));
+                    return response;
+                })
+                .catch(() => caches.match(e.request))
+        );
+        return;
+    }
+
+    // Cache-first for CSS and images
+    if (e.request.destination === 'style' || e.request.destination === 'image') {
         e.respondWith(
             caches.match(e.request).then(cached => cached || fetch(e.request))
         );
@@ -64,7 +72,6 @@ self.addEventListener('fetch', e => {
     );
 });
 
-// ===== PUSH NOTIFICATIONS =====
 self.addEventListener('push', e => {
     if (!e.data) return;
     const data = e.data.json();
@@ -80,7 +87,6 @@ self.addEventListener('push', e => {
     );
 });
 
-// Open app when notification tapped
 self.addEventListener('notificationclick', e => {
     e.notification.close();
     e.waitUntil(
