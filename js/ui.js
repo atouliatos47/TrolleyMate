@@ -521,11 +521,6 @@ const UI = {
         } catch(e) { Utils.showToast('Failed to add item', true); }
     },
 
-    closeAislePanel() {
-        document.getElementById('aislePanelOverlay').classList.remove('show');
-        this.currentAislePanel = null;
-    },
-
     // ===== ADD / DELETE AISLE =====
     showAddAisle() {
         const modal = document.getElementById('modal');

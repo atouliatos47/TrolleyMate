@@ -22,17 +22,21 @@ Object.assign(App, {
         const overlay = document.getElementById('shoppingModeOverlay');
         if (!overlay) return;
         overlay.classList.remove('hidden');
+        // Hide all nav sections first
         document.getElementById('navAislePanel').classList.add('hidden');
         document.getElementById('navStoreScreen').classList.add('hidden');
+        document.getElementById('navHomeScreen').classList.add('hidden');
         document.getElementById('navShoppingMode').classList.remove('hidden');
+        // Close aisle panel overlay without touching nav (nav already set above)
+        document.getElementById('aislePanelOverlay').classList.remove('show');
+        UI.currentAislePanel = null;
+        UI.lastAislePanel = null;
         const title = document.getElementById('shoppingModeTitle');
         const stats = document.getElementById('shoppingModeStats');
         if (title) title.textContent = 'All Shopping Lists';
         const totalItems = API.items.filter(i => !i.isChecked).length;
         if (stats) stats.textContent = `${totalItems} item${totalItems !== 1 ? 's' : ''}`;
         this.renderShoppingModeList();
-        UI.closeAislePanel();
-        UI.lastAislePanel = null;
         this.setShoppingStatus(true);
     },
 
