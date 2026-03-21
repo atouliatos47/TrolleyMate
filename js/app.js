@@ -265,6 +265,63 @@ const App = {
         overlay.classList.add('show');
     },
 
+    showUpgradePrompt(reason) {
+        const daysLeft = API.trialDaysLeft;
+        const trialExpired = !API.isTrialActive && !!API.trialStartedAt;
+        const modal = document.getElementById('modal');
+        const overlay = document.getElementById('modalOverlay');
+        modal.innerHTML = `
+            <div style="text-align:center;padding:8px 0 16px;">
+                <div style="font-size:52px;margin-bottom:12px;">👨‍👩‍👧‍👦</div>
+                <h2 style="margin:0 0 6px;font-size:22px;color:#1a1a2e;">BasketMate Family</h2>
+                ${trialExpired
+                    ? `<div style="background:#fee2e2;border-radius:10px;padding:10px;margin-bottom:14px;font-size:13px;color:#dc2626;font-weight:600;">⏰ Your 15-day free trial has ended</div>`
+                    : daysLeft <= 5
+                    ? `<div style="background:#fef3c7;border-radius:10px;padding:10px;margin-bottom:14px;font-size:13px;color:#d97706;font-weight:600;">⏳ ${daysLeft} day${daysLeft !== 1 ? 's' : ''} left in your trial</div>`
+                    : ''
+                }
+                ${reason ? `<p style="color:#6b7280;font-size:13px;margin:0 0 16px;">${reason}</p>` : ''}
+                <div style="background:#f0f9ff;border-radius:14px;padding:16px;margin-bottom:20px;text-align:left;">
+                    <div style="font-weight:700;color:#1a1a2e;margin-bottom:10px;">Everything in Family:</div>
+                    <div style="font-size:14px;color:#374151;line-height:2;">
+                        ✅ Unlimited stores<br>
+                        ✅ Unlimited aisles<br>
+                        ✅ Unlimited products<br>
+                        ✅ Household sharing<br>
+                        ✅ Real-time sync<br>
+                        ✅ Push notifications
+                    </div>
+                </div>
+                <div style="background:#005EA5;color:white;border-radius:14px;padding:16px;margin-bottom:16px;">
+                    <div style="font-size:28px;font-weight:900;">£2.99</div>
+                    <div style="font-size:13px;opacity:0.85;">One-time payment — yours forever</div>
+                </div>
+                <button onclick="App.triggerPurchase()" style="width:100%;padding:14px;background:#16a34a;color:white;border:none;border-radius:12px;font-size:16px;font-weight:700;cursor:pointer;margin-bottom:10px;">
+                    🛒 Upgrade to Family
+                </button>
+                <button onclick="Utils.closeModal()" style="width:100%;padding:12px;background:none;color:#9ca3af;border:none;font-size:14px;cursor:pointer;">
+                    ${API.isTrialActive ? 'Continue with trial' : 'Maybe later'}
+                </button>
+            </div>`;
+        overlay.classList.add('show');
+    },
+
+    triggerPurchase() {
+        // This will be replaced with real Google Play billing
+        // For now simulate a successful purchase for testing
+        Utils.closeModal();
+        Utils.showToast('Opening Google Play...');
+        // TODO: integrate Android billing via TWA/Play Billing
+        // For web testing, simulate purchase:
+        if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+            setTimeout(() => {
+                API.verifyPurchase('TEST_TOKEN_' + Date.now())
+                    .then(() => Utils.showToast('🎉 Upgraded to BasketMate Family!'))
+                    .catch(() => Utils.showToast('Purchase failed', true));
+            }, 1000);
+        }
+    },
+
     darken(hex) {
         const n = parseInt(hex.slice(1), 16);
         const r = Math.max(0, (n >> 16) - 30);

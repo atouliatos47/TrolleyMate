@@ -9,6 +9,23 @@ Object.assign(App, {
         const overlay = document.getElementById('settingsOverlay');
         const nameSub = document.getElementById('currentNameSub');
         if (nameSub) nameSub.textContent = `Signed in as ${API.memberName}`;
+        // Update upgrade button based on premium status
+        const upgradeTitle = document.getElementById('upgradeSettingsTitle');
+        const upgradeSub = document.getElementById('upgradeSettingsSub');
+        const upgradeItem = document.getElementById('upgradeSettingsItem');
+        if (upgradeTitle && upgradeSub) {
+            if (API.isPremium) {
+                upgradeTitle.textContent = '✅ BasketMate Family';
+                upgradeSub.textContent = 'You have full access — thank you!';
+                if (upgradeItem) upgradeItem.onclick = null;
+            } else if (API.isTrialActive) {
+                upgradeTitle.textContent = '⏳ Free Trial Active';
+                upgradeSub.textContent = `${API.trialDaysLeft} day${API.trialDaysLeft !== 1 ? 's' : ''} left — upgrade to keep full access`;
+            } else {
+                upgradeTitle.textContent = '⭐ Upgrade to Family';
+                upgradeSub.textContent = '£2.99 one-time — unlimited everything';
+            }
+        }
         const isSilent = localStorage.getItem('bm_silent') === 'true';
         const toggle = document.getElementById('silentModeToggle');
         const thumb = document.getElementById('silentModeThumb');
@@ -136,6 +153,23 @@ Object.assign(App, {
     },
 
     toggleSilentMode() {
+        // Update upgrade button based on premium status
+        const upgradeTitle = document.getElementById('upgradeSettingsTitle');
+        const upgradeSub = document.getElementById('upgradeSettingsSub');
+        const upgradeItem = document.getElementById('upgradeSettingsItem');
+        if (upgradeTitle && upgradeSub) {
+            if (API.isPremium) {
+                upgradeTitle.textContent = '✅ BasketMate Family';
+                upgradeSub.textContent = 'You have full access — thank you!';
+                if (upgradeItem) upgradeItem.onclick = null;
+            } else if (API.isTrialActive) {
+                upgradeTitle.textContent = '⏳ Free Trial Active';
+                upgradeSub.textContent = `${API.trialDaysLeft} day${API.trialDaysLeft !== 1 ? 's' : ''} left — upgrade to keep full access`;
+            } else {
+                upgradeTitle.textContent = '⭐ Upgrade to Family';
+                upgradeSub.textContent = '£2.99 one-time — unlimited everything';
+            }
+        }
         const isSilent = localStorage.getItem('bm_silent') === 'true';
         localStorage.setItem('bm_silent', String(!isSilent));
         const toggle = document.getElementById('silentModeToggle');

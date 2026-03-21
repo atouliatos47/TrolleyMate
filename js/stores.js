@@ -35,6 +35,10 @@ Object.assign(App, {
         this.requestWakeLock();
         UI.renderAisles();
         UI.renderList();
+        // Refresh aisles from server in case new store was just seeded
+        API.fetchAisles(storeId).then(() => {
+            UI.renderAisles();
+        }).catch(() => {});
     },
 
     goHome() {
@@ -50,9 +54,14 @@ Object.assign(App, {
 
     // ===== ADD STORE =====
     showAddStore() {
+        // Free tier limit — max 3 stores
+        if (!API.hasFullAccess && API.stores.length >= 3) {
+            App.showUpgradePrompt(`You have reached the 3 store limit on the free plan. Upgrade to BasketMate Family to add unlimited stores.`);
+            return;
+        }
         // Store name → auto colour map
         const storeColours = {
-            'co-op': '#00B1A9', 'coop': '#00B1A9',
+            'co-op': '#00B1A9', 'coop': '#00B1A9', 'co op': '#00B1A9',
             'tesco': '#005EA5', 'iceland': '#D61F26',
             'lidl': '#0050AA', "sainsbury's": '#F47920', 'sainsburys': '#F47920',
             'b&m': '#6B2D8B', 'aldi': '#003082', 'morrisons': '#00AA4F',

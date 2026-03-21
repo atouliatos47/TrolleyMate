@@ -8,6 +8,25 @@ const API = {
     householdCode: null,
     memberName: 'Someone',
     eventSource: null,
+    isPremium: false,
+    trialStartedAt: null,
+
+    get isTrialActive() {
+        if (this.isPremium) return true;
+        if (!this.trialStartedAt) return false;
+        const trialEnd = new Date(this.trialStartedAt).getTime() + (15 * 24 * 60 * 60 * 1000);
+        return Date.now() < trialEnd;
+    },
+
+    get trialDaysLeft() {
+        if (!this.trialStartedAt) return 0;
+        const trialEnd = new Date(this.trialStartedAt).getTime() + (15 * 24 * 60 * 60 * 1000);
+        return Math.max(0, Math.ceil((trialEnd - Date.now()) / (24 * 60 * 60 * 1000)));
+    },
+
+    get hasFullAccess() {
+        return this.isPremium || this.isTrialActive;
+    },
 
     get storeAisles() {
         return this.aisles.filter(a => a.storeId === this.currentStoreId);
@@ -30,6 +49,10 @@ const API = {
         this.householdCode = data.code;
         localStorage.setItem('bm_household_id', data.id);
         localStorage.setItem('bm_household_code', data.code);
+        // Start 15-day trial from creation
+        const trialStart = new Date().toISOString();
+        localStorage.setItem('bm_trial_started', trialStart);
+        this.trialStartedAt = trialStart;
         return data;
     },
 
@@ -78,8 +101,12 @@ const API = {
             this.aisles     = data.aisles;
             this.items      = data.items;
             this.favourites = data.favourites || [];
-            console.log('Init:', this.stores.length, 'stores,', this.aisles.length, 'aisles,', this.items.length, 'items');
+            this.isPremium  = data.isPremium || false;
+            // Load trial start from localStorage (set when household was created)
+            this.trialStartedAt = localStorage.getItem('bm_trial_started');
+            console.log('Init:', this.stores.length, 'stores,', this.aisles.length, 'aisles,', this.items.length, 'items', '| Premium:', this.isPremium, '| Trial days left:', this.trialDaysLeft);
             UI.renderHome();
+            UI.renderTrialBanner();
             const badge = document.getElementById('connectionBadge');
             if (badge) badge.textContent = '● Live';
         });
@@ -118,13 +145,8 @@ const API = {
 
         this.eventSource.addEventListener('newItem', (e) => {
             const item = JSON.parse(e.data);
-            // Remove any temp item with same name/store before adding the real one
-            this.items = this.items.filter(i => !(i.name.toLowerCase() === item.name.toLowerCase() && i.storeId === item.storeId && i.id > 1000000000000));
             this.items.push(item);
-            if (item.storeId === this.currentStoreId) {
-                UI.renderList();
-                if (UI.currentAislePanel) UI.renderAislePanelProducts(UI.currentAislePanel);
-            }
+            if (item.storeId === this.currentStoreId) UI.renderList();
             UI.renderHome();
             // Only show in-app alert if shopping mode is currently open AND someone else added it
             const shoppingMode = document.getElementById('shoppingModeOverlay');
@@ -171,6 +193,13 @@ const API = {
             UI.renderFavourites();
         });
 
+        this.eventSource.addEventListener('premiumUpgraded', (e) => {
+            this.isPremium = true;
+            UI.renderHome();
+            UI.renderTrialBanner();
+            Utils.showToast('🎉 Welcome to BasketMate Family!');
+        });
+
         this.eventSource.onerror = () => {
             const badge = document.getElementById('connectionBadge');
             if (badge) { badge.textContent = '○ Offline'; badge.style.color = 'rgba(255,255,255,0.5)'; }
@@ -196,7 +225,7 @@ const API = {
         const r = await fetch('/stores', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ ...data, householdId: this.householdId })
+            body: JSON.stringify(data)
         });
         if (!r.ok) throw new Error('Failed to add store');
         return await r.json();
@@ -317,6 +346,16 @@ const API = {
             body: JSON.stringify({ storeId: this.currentStoreId, householdId: this.householdId })
         });
         if (!r.ok) throw new Error('Failed to clear checked');
+        return await r.json();
+    },
+
+    async verifyPurchase(purchaseToken) {
+        const r = await fetch('/purchase/verify', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ householdId: this.householdId, purchaseToken })
+        });
+        if (!r.ok) throw new Error('Purchase verification failed');
         return await r.json();
     },
 

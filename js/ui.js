@@ -293,6 +293,12 @@ const UI = {
         if (!input) return;
         const name = input.value.trim();
         if (!name) { Utils.shakeElement(input); return; }
+        const aisle = API.aisles.find(a => a.id === aisleId);
+        if (!API.hasFullAccess && aisle && aisle.products.length >= 8) {
+            Utils.closeModal();
+            App.showUpgradePrompt('You\'ve reached the 8 product limit per aisle on the free plan. Upgrade to BasketMate Family for unlimited products.');
+            return;
+        }
         input.value = '';
         Utils.closeModal();
         try {
@@ -523,6 +529,10 @@ const UI = {
 
     // ===== ADD / DELETE AISLE =====
     showAddAisle() {
+        if (!API.hasFullAccess && API.storeAisles.length >= 5) {
+            App.showUpgradePrompt('You\'ve reached the 5 aisle limit on the free plan. Upgrade to BasketMate Family for unlimited aisles.');
+            return;
+        }
         const modal = document.getElementById('modal');
         const overlay = document.getElementById('modalOverlay');
         modal.innerHTML = `
@@ -738,6 +748,32 @@ const UI = {
                     </div>`).join('');
             }
         } catch(e) { Utils.showToast('Failed to add product', true); }
+    },
+
+    renderTrialBanner() {
+        // Remove existing banner
+        const existing = document.getElementById('trialBanner');
+        if (existing) existing.remove();
+        if (API.isPremium) return;
+        if (!API.trialStartedAt) return;
+        const daysLeft = API.trialDaysLeft;
+        if (daysLeft <= 0) {
+            // Trial expired — show persistent upgrade banner
+            const banner = document.createElement('div');
+            banner.id = 'trialBanner';
+            banner.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:9999;background:#dc2626;color:white;text-align:center;padding:10px 16px;font-size:13px;font-weight:600;cursor:pointer;';
+            banner.innerHTML = '⏰ Your free trial has ended. <u>Upgrade to BasketMate Family →</u>';
+            banner.onclick = () => App.showUpgradePrompt();
+            document.body.prepend(banner);
+        } else if (daysLeft <= 5) {
+            // Trial ending soon — show warning banner
+            const banner = document.createElement('div');
+            banner.id = 'trialBanner';
+            banner.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:9999;background:#f59e0b;color:white;text-align:center;padding:8px 16px;font-size:13px;font-weight:600;cursor:pointer;';
+            banner.innerHTML = `⏳ ${daysLeft} day${daysLeft !== 1 ? 's' : ''} left in your free trial. <u>Upgrade now →</u>`;
+            banner.onclick = () => App.showUpgradePrompt();
+            document.body.prepend(banner);
+        }
     },
 
     async deleteProduct(aisleId, name) {
