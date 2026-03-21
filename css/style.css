@@ -597,6 +597,25 @@ body {
     transition: opacity 0.2s, background 0.2s;
 }
 
+.store-card-delete-outside {
+    position: absolute;
+    top: 50%;
+    right: -14px;
+    transform: translateY(-50%);
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    background: #fee2e2;
+    color: #dc2626;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 10;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.15);
+}
+.store-card-delete-outside:hover { background: #fca5a5; }
+
 .store-card-delete-visible {
     opacity: 1 !important;
     background: #fee2e2;

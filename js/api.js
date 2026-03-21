@@ -196,7 +196,7 @@ const API = {
         const r = await fetch('/stores', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(data)
+            body: JSON.stringify({ ...data, householdId: this.householdId })
         });
         if (!r.ok) throw new Error('Failed to add store');
         return await r.json();

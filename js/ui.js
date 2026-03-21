@@ -32,8 +32,9 @@ const UI = {
             'wilko':        'wilko.com',
             'home bargains': 'homebargains.co.uk',
             'poundland':    'poundland.co.uk',
-            'co-op':        'coop.co.uk',
-            'coop':         'coop.co.uk',
+            'co-op':        'co-operative.coop',
+            'coop':         'co-operative.coop',
+            'co op':        'co-operative.coop',
             'costco':       'costco.co.uk',
         };
         return logos[name.toLowerCase()] || null;
@@ -62,25 +63,22 @@ const UI = {
                    </div>`;
 
             return `
-                <div class="store-card" onclick="App.enterStore(${store.id})"
-                    style="--card-color: ${store.color};">
-                    <div class="store-card-accent" style="background:${store.color};"></div>
-                    <div class="store-card-body">
-                        ${avatarHtml}
-                        <div class="store-card-info">
-                            <div class="store-card-name">${Utils.escapeHtml(store.name)}</div>
-                            <div class="store-card-status ${itemCount ? 'has-items' : ''}">
-                                ${itemCount ? `${itemCount} item${itemCount > 1 ? 's' : ''} in list` : 'List is empty'}
+                <div class="store-card-wrapper" style="position:relative;margin-bottom:0;">
+                    <div class="store-card" onclick="App.enterStore(${store.id})"
+                        style="--card-color: ${store.color};">
+                        <div class="store-card-accent" style="background:${store.color};"></div>
+                        <div class="store-card-body">
+                            ${avatarHtml}
+                            <div class="store-card-info">
+                                <div class="store-card-name">${Utils.escapeHtml(store.name)}</div>
+                                <div class="store-card-status ${itemCount ? 'has-items' : ''}">
+                                    ${itemCount ? `${itemCount} item${itemCount > 1 ? 's' : ''} in list` : 'List is empty'}
+                                </div>
                             </div>
                         </div>
-                        <div class="store-card-arrow">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-                                <path d="M9 18l6-6-6-6" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-                            </svg>
-                        </div>
                     </div>
-                    ${!logoDomain ? `<button class="store-card-delete store-card-delete-visible" onclick="event.stopPropagation(); App.confirmDeleteStore(${store.id})" title="Delete store">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                    ${!logoDomain ? `<button class="store-card-delete-outside" onclick="App.confirmDeleteStore(${store.id})" title="Delete store">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
                             <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
                         </svg>
                     </button>` : ''}
