@@ -1,4 +1,3 @@
-require('dotenv').config();
 const http    = require('http');
 const fs      = require('fs').promises;
 const path    = require('path');
@@ -15,18 +14,16 @@ webpush.setVapidDetails(process.env.VAPID_EMAIL, process.env.VAPID_PUBLIC_KEY, p
 const pool = new Pool({ connectionString: process.env.DATABASE_URL, ssl: { rejectUnauthorized: false } });
 
 const DEFAULT_AISLES = [
-    { name: 'Bread',        sort_order: 1,  products: ['White Bread', 'Brown Bread', 'Bread Rolls', 'Bagels', 'Wraps', 'Pitta Bread', 'Crumpets', 'Croissants', 'Muffins', 'Sourdough'] },
-    { name: 'Dairy',        sort_order: 2,  products: ['Milk', 'Butter', 'Cheddar', 'Mozzarella', 'Cream Cheese', 'Sour Cream', 'Double Cream', 'Yoghurt', 'Greek Yoghurt'] },
-    { name: 'Veg / Fruit',  sort_order: 3,  products: ['Bananas', 'Apples', 'Oranges', 'Grapes', 'Strawberries', 'Potatoes', 'Carrots', 'Broccoli', 'Spinach', 'Tomatoes', 'Onions', 'Garlic', 'Mushrooms', 'Peppers', 'Cucumber', 'Lettuce', 'Courgette', 'Lemons'] },
-    { name: 'Meat',         sort_order: 4,  products: ['Chicken Breast', 'Chicken Thighs', 'Minced Beef', 'Beef Steak', 'Pork Chops', 'Bacon', 'Sausages', 'Lamb Chops', 'Salmon Fillet', 'Cod Fillet', 'Tuna Steak', 'Prawns'] },
-    { name: 'Dairy Fridge', sort_order: 5,  products: ['Eggs', 'Orange Juice', 'Apple Juice', 'Hummus', 'Coleslaw', 'Pasta Salad'] },
-    { name: 'Herbs',        sort_order: 6,  products: ['Basil', 'Coriander', 'Parsley', 'Mint', 'Rosemary', 'Thyme', 'Chives', 'Dill', 'Oregano', 'Bay Leaves'] },
-    { name: 'Cereal',       sort_order: 7,  products: ['Cornflakes', 'Weetabix', 'Porridge Oats', 'Granola', 'Muesli', 'Shreddies', 'Rice Krispies', 'Cheerios'] },
-    { name: 'Canned Food',  sort_order: 8,  products: ['Baked Beans', 'Chopped Tomatoes', 'Chickpeas', 'Kidney Beans', 'Sweetcorn', 'Tuna', 'Sardines', 'Coconut Milk', 'Lentils', 'Soup', 'Olives', 'Tomato Paste'] },
-    { name: 'Pasta / Rice', sort_order: 9,  products: ['Spaghetti', 'Penne', 'Fusilli', 'Lasagne Sheets', 'Basmati Rice', 'Brown Rice', 'Egg Noodles', 'Rice Noodles'] },
-    { name: 'Toiletries',   sort_order: 10, products: ['Shampoo', 'Conditioner', 'Body Wash', 'Shower Gel', 'Toothpaste', 'Toothbrush', 'Deodorant', 'Face Wash', 'Moisturiser', 'Razors', 'Soap'] },
-    { name: 'Drinks',       sort_order: 11, products: ['Water', 'Sparkling Water', 'Coca Cola', 'Pepsi', 'Lemonade', 'Tea', 'Coffee', 'Hot Chocolate', 'Squash', 'Energy Drink'] },
-    { name: 'Household',    sort_order: 12, products: ['Washing Up Liquid', 'Dishwasher Tablets', 'Laundry Tablets', 'Fabric Softener', 'Bleach', 'Toilet Cleaner', 'Surface Spray', 'Bin Bags', 'Foil', 'Cling Film', 'Kitchen Roll', 'Toilet Roll'] },
+    { name: '🥖 Bakery',           sort_order: 1,  products: ['White Bread', 'Brown Bread', 'Sourdough', 'Croissants', 'Bagels', 'Crumpets', 'Pitta Bread', 'Wraps', 'Bread Rolls', 'Muffins'] },
+    { name: '🥦 Fresh Food',        sort_order: 2,  products: ['Milk', 'Butter', 'Cheddar', 'Eggs', 'Yoghurt', 'Chicken Breast', 'Minced Beef', 'Bacon', 'Sausages', 'Salmon Fillet', 'Bananas', 'Apples', 'Potatoes', 'Carrots', 'Broccoli', 'Tomatoes', 'Onions', 'Peppers', 'Cucumber', 'Strawberries'] },
+    { name: '🧊 Frozen Food',       sort_order: 3,  products: ['Frozen Peas', 'Chips', 'Fish Fingers', 'Pizza', 'Ice Cream', 'Waffles', 'Frozen Chicken', 'Frozen Veg Mix'] },
+    { name: '🍫 Treats & Snacks',   sort_order: 4,  products: ['Chocolate', 'Crisps', 'Biscuits', 'Sweets', 'Nuts', 'Popcorn', 'Cereal Bars', 'Crackers'] },
+    { name: '🥫 Food Cupboard',     sort_order: 5,  products: ['Pasta', 'Rice', 'Baked Beans', 'Chopped Tomatoes', 'Tuna', 'Soup', 'Porridge Oats', 'Cornflakes', 'Weetabix', 'Coffee', 'Tea', 'Squash', 'Ketchup', 'Mayo', 'Olive Oil'] },
+    { name: '🧃 Drinks',            sort_order: 6,  products: ['Water', 'Coca Cola', 'Pepsi', 'Lemonade', 'Orange Juice', 'Energy Drink', 'Beer', 'Wine'] },
+    { name: '👶 Baby & Toddler',    sort_order: 7,  products: ['Nappies', 'Baby Wipes', 'Baby Food', 'Formula Milk', 'Baby Shampoo', 'Nappy Bags'] },
+    { name: '💊 Health & Beauty',   sort_order: 8,  products: ['Shampoo', 'Shower Gel', 'Toothpaste', 'Deodorant', 'Moisturiser', 'Razors', 'Paracetamol', 'Vitamins'] },
+    { name: '🐾 Pets',              sort_order: 9,  products: ['Dog Food', 'Cat Food', 'Cat Litter', 'Dog Treats', 'Pet Shampoo', 'Bird Seed'] },
+    { name: '🧹 Household',         sort_order: 10, products: ['Washing Up Liquid', 'Dishwasher Tablets', 'Laundry Tablets', 'Bin Bags', 'Kitchen Roll', 'Toilet Roll', 'Bleach', 'Surface Spray'] },
 ];
 
 function generateCode() {
@@ -81,6 +78,9 @@ async function initDb() {
     await pool.query(`ALTER TABLE items ADD COLUMN IF NOT EXISTS household_id INTEGER REFERENCES households(id) ON DELETE CASCADE`);
     await pool.query(`ALTER TABLE items ADD COLUMN IF NOT EXISTS added_by TEXT`);
     await pool.query(`ALTER TABLE favourites ADD COLUMN IF NOT EXISTS household_id INTEGER REFERENCES households(id) ON DELETE CASCADE`);
+    await pool.query(`ALTER TABLE households ADD COLUMN IF NOT EXISTS is_premium BOOLEAN NOT NULL DEFAULT false`);
+    await pool.query(`ALTER TABLE households ADD COLUMN IF NOT EXISTS purchase_token TEXT`);
+    await pool.query(`ALTER TABLE items ADD COLUMN IF NOT EXISTS added_by TEXT`);
     await pool.query(`ALTER TABLE favourites ALTER COLUMN aisle_id DROP NOT NULL`);
 
     const { rows } = await pool.query('SELECT COUNT(*) FROM stores');
@@ -127,18 +127,39 @@ const server = http.createServer(async (req, res) => {
         if (!householdId) { res.writeHead(400); return res.end(JSON.stringify({ error: 'householdId required' })); }
         res.writeHead(200, { 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache', 'Connection': 'keep-alive' });
         try {
-            const [sr, ar, ir, fr] = await Promise.all([
+            const [sr, ar, ir, fr, hr] = await Promise.all([
                 pool.query('SELECT * FROM stores ORDER BY sort_order ASC'),
                 pool.query('SELECT * FROM aisles WHERE household_id=$1 ORDER BY sort_order ASC', [householdId]),
                 pool.query('SELECT * FROM items WHERE household_id=$1 ORDER BY added_at ASC', [householdId]),
-                pool.query('SELECT * FROM favourites WHERE household_id=$1 ORDER BY name ASC', [householdId])
+                pool.query('SELECT * FROM favourites WHERE household_id=$1 ORDER BY name ASC', [householdId]),
+                pool.query('SELECT is_premium FROM households WHERE id=$1', [householdId])
             ]);
-            res.write(`event: init\ndata: ${JSON.stringify({ stores: sr.rows.map(mapStore), aisles: ar.rows.map(mapAisle), items: ir.rows.map(mapItem), favourites: fr.rows })}\n\n`);
+            const isPremium = hr.rows[0]?.is_premium || false;
+            res.write(`event: init\ndata: ${JSON.stringify({ stores: sr.rows.map(mapStore), aisles: ar.rows.map(mapAisle), items: ir.rows.map(mapItem), favourites: fr.rows, isPremium })}\n\n`);
         } catch (e) { console.error('SSE init error:', e); }
         if (!clients.has(householdId)) clients.set(householdId, new Set());
         clients.get(householdId).add(res);
         req.on('close', () => clients.get(householdId)?.delete(res));
         return;
+    }
+
+    // ===== PREMIUM UPGRADE =====
+    if (pathname === '/purchase/verify' && method === 'POST') {
+        try {
+            const b = await getBody(req);
+            const { householdId, purchaseToken } = b;
+            if (!householdId || !purchaseToken) { res.writeHead(400); return res.end(JSON.stringify({ error: 'Missing fields' })); }
+            // For now: trust the token and upgrade (Google Play server verification can be added later)
+            await pool.query('UPDATE households SET is_premium=true, purchase_token=$1 WHERE id=$2', [purchaseToken, householdId]);
+            // Broadcast premium upgrade to all household clients
+            const msg = `event: premiumUpgraded\ndata: ${JSON.stringify({ householdId })}\n\n`;
+            clients.get(parseInt(householdId))?.forEach(r => r.write(msg));
+            res.writeHead(200);
+            return res.end(JSON.stringify({ success: true, isPremium: true }));
+        } catch(e) {
+            res.writeHead(500);
+            return res.end(JSON.stringify({ error: 'Upgrade failed' }));
+        }
     }
 
     if (pathname === '/stores' && method === 'GET')  return storesRoute.getAll(req, res);
