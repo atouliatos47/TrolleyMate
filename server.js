@@ -94,6 +94,31 @@ async function initDb() {
         for (const s of stores) await pool.query('INSERT INTO stores (name, color, emoji, sort_order) VALUES ($1,$2,$3,$4)', [s.name, s.color, s.emoji, s.sort_order]);
         console.log('Stores seeded!');
     }
+    // ===== MIGRATE AISLES TO NEW SUPERMARKET-FRIENDLY STRUCTURE =====
+    // Runs once — checks if migration already done via emoji aisle name
+    const checkMigration = await pool.query("SELECT COUNT(*) FROM aisles WHERE name LIKE '🥖%'");
+    if (parseInt(checkMigration.rows[0].count) === 0) {
+        console.log('Migrating to new aisle structure — wiping old data...');
+        // Wipe everything clean
+        await pool.query('DELETE FROM items');
+        await pool.query('DELETE FROM favourites');
+        await pool.query('DELETE FROM aisles');
+        // Re-seed fresh aisles for every household + store combination
+        const households = await pool.query('SELECT id FROM households');
+        const stores = await pool.query('SELECT id FROM stores');
+        for (const h of households.rows) {
+            for (const s of stores.rows) {
+                for (const aisle of DEFAULT_AISLES) {
+                    await pool.query(
+                        'INSERT INTO aisles (household_id, store_id, name, sort_order, products) VALUES ($1,$2,$3,$4,$5)',
+                        [h.id, s.id, aisle.name, aisle.sort_order, JSON.stringify(aisle.products)]
+                    );
+                }
+            }
+        }
+        console.log('Aisle migration complete — fresh start!');
+    }
+
     console.log('Database ready');
 }
 
