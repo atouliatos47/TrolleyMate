@@ -13,7 +13,7 @@ Object.assign(App, {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ endpoint: sub.endpoint, active })
             });
-        } catch(e) {}
+        } catch (e) { }
     },
 
     openShoppingMode() { this.enterShoppingMode(); },
@@ -22,12 +22,10 @@ Object.assign(App, {
         const overlay = document.getElementById('shoppingModeOverlay');
         if (!overlay) return;
         overlay.classList.remove('hidden');
-        // Hide all nav sections first
         document.getElementById('navAislePanel').classList.add('hidden');
         document.getElementById('navStoreScreen').classList.add('hidden');
         document.getElementById('navHomeScreen').classList.add('hidden');
         document.getElementById('navShoppingMode').classList.remove('hidden');
-        // Close aisle panel overlay without touching nav (nav already set above)
         document.getElementById('aislePanelOverlay').classList.remove('show');
         UI.currentAislePanel = null;
         UI.lastAislePanel = null;
@@ -45,7 +43,6 @@ Object.assign(App, {
     closeShoppingMode() {
         const overlay = document.getElementById('shoppingModeOverlay');
         if (overlay) overlay.classList.add('hidden');
-        // Restore the correct nav
         document.getElementById('navShoppingMode').classList.add('hidden');
         if (UI.currentAislePanel) {
             document.getElementById('navAislePanel').classList.remove('hidden');
@@ -60,13 +57,12 @@ Object.assign(App, {
         if (!container) return;
 
         const allItems = API.items.filter(i => !i.isChecked);
-        // Update stats count live
         const stats = document.getElementById('shoppingModeStats');
-        if (stats) stats.textContent = `${allItems.length} item${allItems.length !== 1 ? 's' : ''}`;
+        if (stats) stats.textContent = t('items', allItems.length);
         if (!allItems.length) {
             container.innerHTML = `<div style="text-align:center;padding:40px 20px;color:#9ca3af;">
                 <div style="font-size:48px;margin-bottom:12px;">✅</div>
-                <p>All done! Your list is empty.</p>
+                <p>${t('allDone')}</p>
             </div>`;
             return;
         }
@@ -90,7 +86,7 @@ Object.assign(App, {
                         onerror="this.style.display='none'"
                         style="width:24px;height:24px;border-radius:4px;background:white;padding:2px;object-fit:contain;">` : ''}
                     <span style="font-size:16px;font-weight:700;color:white;">${Utils.escapeHtml(store.name)}</span>
-                    <span style="font-size:13px;color:rgba(255,255,255,0.75);margin-left:auto;">${storeItems.length} item${storeItems.length > 1 ? 's' : ''}</span>
+                    <span style="font-size:13px;color:rgba(255,255,255,0.75);margin-left:auto;">${t('items', storeItems.length)}</span>
                 </div>
             </div>`;
 
@@ -110,16 +106,19 @@ Object.assign(App, {
                 .sort((a, b) => a.sortOrder - b.sortOrder);
 
             storeAisles.forEach(aisle => {
+                // ✅ Use translateAisleName() for aisle headers
+                const translatedAisleName = translateAisleName(aisle.name);
                 html += `<div class="shop-aisle-group">
-                    <div class="shop-aisle-header">${Utils.escapeHtml(translateAisleName(aisle.name))}</div>
-                    ${grouped[aisle.id].sort((a,b) => a.name.localeCompare(b.name)).map(item => this.renderShopItem(item)).join('')}
+                    <div class="shop-aisle-header">${Utils.escapeHtml(translatedAisleName)}</div>
+                    ${grouped[aisle.id].sort((a, b) => a.name.localeCompare(b.name)).map(item => this.renderShopItem(item)).join('')}
                 </div>`;
             });
 
             if (noAisle.length) {
+                // ✅ Translate "Other" header
                 html += `<div class="shop-aisle-group">
-                    <div class="shop-aisle-header">Other</div>
-                    ${noAisle.sort((a,b) => a.name.localeCompare(b.name)).map(item => this.renderShopItem(item)).join('')}
+                    <div class="shop-aisle-header">${t('other')}</div>
+                    ${noAisle.sort((a, b) => a.name.localeCompare(b.name)).map(item => this.renderShopItem(item)).join('')}
                 </div>`;
             }
         });
@@ -155,11 +154,10 @@ Object.assign(App, {
                 osc.stop(ctx.currentTime + 0.4);
             };
             if (ctx.state === 'suspended') { ctx.resume().then(play); } else { play(); }
-        } catch(e) {}
+        } catch (e) { }
     },
 
     async toggleShopItem(id) {
-        // Debounce — prevent double taps
         if (this._tappedItems && this._tappedItems.has(id)) return;
         if (!this._tappedItems) this._tappedItems = new Set();
         this._tappedItems.add(id);
@@ -169,7 +167,6 @@ Object.assign(App, {
             const result = await API.toggleCheck(id);
             if (result && result.isChecked) {
                 this.playPing();
-                // Animate the item out FIRST before re-rendering
                 const el = document.querySelector(`.shop-item[onclick="App.toggleShopItem(${id})"]`);
                 if (el) {
                     el.style.transition = 'all 0.4s cubic-bezier(0.4,0,0.2,1)';
@@ -186,17 +183,30 @@ Object.assign(App, {
                         });
                     }, 350);
                 }
-                // Update state and delete after animation completes
                 setTimeout(async () => {
                     const idx = API.items.findIndex(i => i.id === id);
                     if (idx !== -1) API.items[idx].isChecked = true;
-                    try { await API.deleteItem(id); } catch(e) {}
+                    try { await API.deleteItem(id); } catch (e) { }
                     API.items = API.items.filter(i => i.id !== id);
                     this.renderShoppingModeList();
                 }, 750);
             } else {
                 this.renderShoppingModeList();
             }
-        } catch(e) { console.log('toggleShopItem error:', e); }
+        } catch (e) { console.log('toggleShopItem error:', e); }
+    }
+});
+
+// Re-render shopping mode when language changes
+window.addEventListener('languageChanged', () => {
+    const overlay = document.getElementById('shoppingModeOverlay');
+    if (overlay && !overlay.classList.contains('hidden')) {
+        const title = document.getElementById('shoppingModeTitle');
+        const stats = document.getElementById('shoppingModeStats');
+        const label = document.getElementById('shoppingModeLabel');
+        if (title) title.textContent = t('allShoppingLists');
+        if (stats) stats.textContent = t('items', API.items.filter(i => !i.isChecked).length);
+        if (label) label.textContent = t('shoppingList');
+        App.renderShoppingModeList();
     }
 });
