@@ -1,202 +1,274 @@
 // ===================================================
-// shopping.js — Shopping mode, toggle items
+// settings.js — Settings panel, name, household, language
 // ===================================================
 Object.assign(App, {
 
-    async setShoppingStatus(active) {
-        try {
-            const reg = await navigator.serviceWorker.ready;
-            const sub = await reg.pushManager.getSubscription();
-            if (!sub) return;
-            await fetch('/push/shopping-status', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ endpoint: sub.endpoint, active })
-            });
-        } catch (e) { }
-    },
-
-    openShoppingMode() { this.enterShoppingMode(); },
-
-    enterShoppingMode() {
-        const overlay = document.getElementById('shoppingModeOverlay');
-        if (!overlay) return;
-        overlay.classList.remove('hidden');
-        // Hide all nav sections first
-        document.getElementById('navAislePanel').classList.add('hidden');
-        document.getElementById('navStoreScreen').classList.add('hidden');
-        document.getElementById('navHomeScreen').classList.add('hidden');
-        document.getElementById('navShoppingMode').classList.remove('hidden');
-        // Close aisle panel overlay without touching nav (nav already set above)
-        document.getElementById('aislePanelOverlay').classList.remove('show');
-        UI.currentAislePanel = null;
-        UI.lastAislePanel = null;
-        const title = document.getElementById('shoppingModeTitle');
-        const stats = document.getElementById('shoppingModeStats');
-        if (title) title.textContent = t('allShoppingLists');
-        const label = document.getElementById('shoppingModeLabel');
-        if (label) label.textContent = t('shoppingList');
-        const totalItems = API.items.filter(i => !i.isChecked).length;
-        if (stats) stats.textContent = t('items', totalItems);
-        this.renderShoppingModeList();
-        this.setShoppingStatus(true);
-    },
-
-    closeShoppingMode() {
-        const overlay = document.getElementById('shoppingModeOverlay');
-        if (overlay) overlay.classList.add('hidden');
-        // Restore the correct nav
-        document.getElementById('navShoppingMode').classList.add('hidden');
-        if (UI.currentAislePanel) {
-            document.getElementById('navAislePanel').classList.remove('hidden');
-        } else if (API.currentStoreId) {
-            document.getElementById('navStoreScreen').classList.remove('hidden');
+    showSettings() {
+        const panel = document.getElementById('settingsPanel');
+        const overlay = document.getElementById('settingsOverlay');
+        // Update current name sub
+        const nameSub = document.getElementById('currentNameSub');
+        if (nameSub) nameSub.textContent = t('signedInAs', API.memberName);
+        // Update silent mode toggle
+        const silent = localStorage.getItem('bm_silent') === 'true';
+        const toggle = document.getElementById('silentModeToggle');
+        const thumb = document.getElementById('silentModeThumb');
+        const silentSub = document.getElementById('silentModeSub');
+        if (toggle) toggle.style.background = silent ? '#005EA5' : '#e5e7eb';
+        if (thumb) thumb.style.left = silent ? '22px' : '2px';
+        if (silentSub) silentSub.textContent = silent ? t('soundsMuted') : t('muteSounds');
+        // Update language sub
+        const langSub = document.getElementById('currentLanguageSub');
+        if (langSub) {
+            const lang = localStorage.getItem('bm_language') || 'en';
+            const found = LANGUAGES.find(l => l.code === lang);
+            if (found) langSub.textContent = `${found.name} ${found.flag}`;
         }
-        this.setShoppingStatus(false);
+        // Update upgrade item
+        this._updateUpgradeSettingsItem();
+        panel.classList.add('open');
+        overlay.classList.add('open');
     },
 
-    renderShoppingModeList() {
-        const container = document.getElementById('shoppingModeList');
-        if (!container) return;
+    closeSettings() {
+        document.getElementById('settingsPanel').classList.remove('open');
+        document.getElementById('settingsOverlay').classList.remove('open');
+    },
 
-        const allItems = API.items.filter(i => !i.isChecked);
-        // Update stats count live
-        const stats = document.getElementById('shoppingModeStats');
-        if (stats) stats.textContent = t('items', allItems.length);
-        if (!allItems.length) {
-            container.innerHTML = `<div style="text-align:center;padding:40px 20px;color:#9ca3af;">
-                <div style="font-size:48px;margin-bottom:12px;">✅</div>
-                <p>All done! Your list is empty.</p>
+    _updateUpgradeSettingsItem() {
+        const title = document.getElementById('upgradeSettingsTitle');
+        const sub = document.getElementById('upgradeSettingsSub');
+        const item = document.getElementById('upgradeSettingsItem');
+        if (!title || !sub) return;
+        if (API.isPremium) {
+            title.textContent = t('familyPlan');
+            sub.textContent = t('familyPlanSub');
+            if (item) item.onclick = null;
+        } else if (API.trialDaysLeft > 0) {
+            title.textContent = t('trialActive');
+            sub.textContent = t('trialDaysLeft', API.trialDaysLeft);
+        } else {
+            title.textContent = t('upgradeToFamily');
+            sub.textContent = t('upgradeSub');
+        }
+    },
+
+    showMyCode() {
+        this.closeSettings();
+        const modal = document.getElementById('modal');
+        const overlay = document.getElementById('modalOverlay');
+        const code = API.householdCode || '------';
+        modal.innerHTML = `
+            <div style="text-align:center;padding:8px 0 16px;">
+                <div style="font-size:48px;margin-bottom:12px;">🏠</div>
+                <h3 style="margin:0 0 6px;">${t('myHouseholdCode')}</h3>
+                <p class="modal-sub">${t('shareWithFamily')}</p>
+                <div style="background:#f0f9ff;border:2px solid #005EA5;border-radius:16px;padding:20px;margin:20px 0;">
+                    <div style="font-size:36px;font-weight:900;letter-spacing:8px;color:#005EA5;font-family:monospace;">${code}</div>
+                </div>
+                <button onclick="Utils.closeModal()" style="width:100%;padding:14px;background:#005EA5;color:white;border:none;border-radius:12px;font-size:16px;font-weight:700;cursor:pointer;">OK</button>
             </div>`;
-            return;
-        }
+        overlay.classList.add('show');
+    },
 
-        const storeGroups = {};
-        allItems.forEach(item => {
-            if (!storeGroups[item.storeId]) storeGroups[item.storeId] = [];
-            storeGroups[item.storeId].push(item);
-        });
-
-        let html = '';
-
-        API.stores.forEach(store => {
-            const storeItems = storeGroups[store.id];
-            if (!storeItems || !storeItems.length) return;
-
-            const logoDomain = UI.getStoreLogo(store.name);
-            html += `<div class="shop-store-header" style="background:${store.color};">
-                <div style="display:flex;align-items:center;gap:10px;">
-                    ${logoDomain ? `<img src="https://www.google.com/s2/favicons?domain=${logoDomain}&sz=64"
-                        onerror="this.style.display='none'"
-                        style="width:24px;height:24px;border-radius:4px;background:white;padding:2px;object-fit:contain;">` : ''}
-                    <span style="font-size:16px;font-weight:700;color:white;">${Utils.escapeHtml(store.name)}</span>
-                    <span style="font-size:13px;color:rgba(255,255,255,0.75);margin-left:auto;">${storeItems.length} item${storeItems.length > 1 ? 's' : ''}</span>
+    showChangeName() {
+        this.closeSettings();
+        const modal = document.getElementById('modal');
+        const overlay = document.getElementById('modalOverlay');
+        modal.innerHTML = `
+            <div style="text-align:center;padding:8px 0 16px;">
+                <div style="font-size:48px;margin-bottom:12px;">👤</div>
+                <h3 style="margin:0 0 16px;">${t('changeMyName')}</h3>
+                <input type="text" id="changeNameInput" value="${Utils.escapeHtml(API.memberName)}" maxlength="20"
+                    style="width:100%;padding:14px;border:1.5px solid #e5e7eb;border-radius:12px;font-size:18px;outline:none;text-align:center;margin-bottom:16px;box-sizing:border-box;"
+                    onkeypress="if(event.key==='Enter') App.saveChangedName()">
+                <div class="modal-actions">
+                    <button class="modal-btn cancel" onclick="Utils.closeModal()">${t('cancel')}</button>
+                    <button class="modal-btn confirm" onclick="App.saveChangedName()">Save</button>
                 </div>
             </div>`;
-
-            const grouped = {};
-            const noAisle = [];
-            storeItems.forEach(item => {
-                if (item.aisleId) {
-                    if (!grouped[item.aisleId]) grouped[item.aisleId] = [];
-                    grouped[item.aisleId].push(item);
-                } else {
-                    noAisle.push(item);
-                }
-            });
-
-            const storeAisles = API.aisles
-                .filter(a => a.storeId === store.id && grouped[a.id])
-                .sort((a, b) => a.sortOrder - b.sortOrder);
-
-            storeAisles.forEach(aisle => {
-                html += `<div class="shop-aisle-group">
-                    <div class="shop-aisle-header">${Utils.escapeHtml(translateAisleName(aisle.name))}</div>
-                    ${grouped[aisle.id].sort((a, b) => a.name.localeCompare(b.name)).map(item => this.renderShopItem(item)).join('')}
-                </div>`;
-            });
-
-            if (noAisle.length) {
-                html += `<div class="shop-aisle-group">
-                    <div class="shop-aisle-header">Other</div>
-                    ${noAisle.sort((a, b) => a.name.localeCompare(b.name)).map(item => this.renderShopItem(item)).join('')}
-                </div>`;
-            }
-        });
-
-        container.innerHTML = html;
+        overlay.classList.add('show');
+        setTimeout(() => {
+            const input = document.getElementById('changeNameInput');
+            if (input) { input.focus(); input.select(); }
+        }, 100);
     },
 
-    renderShopItem(item) {
-        return `<div class="shop-item ${item.isChecked ? 'checked' : ''}" onclick="App.toggleShopItem(${item.id})">
-            <span class="shop-item-name ${item.isChecked ? 'crossed' : ''}">${Utils.escapeHtml(item.name)}</span>
-            ${item.quantity > 1 ? `<span class="shop-qty-badge">x${item.quantity}</span>` : ''}
-            ${item.isChecked ? '<span class="shop-done-badge">✓</span>' : ''}
-        </div>`;
+    saveChangedName() {
+        const input = document.getElementById('changeNameInput');
+        const name = input.value.trim();
+        if (!name) { Utils.shakeElement(input); return; }
+        localStorage.setItem('bm_member_name', name);
+        API.memberName = name;
+        Utils.closeModal();
+        Utils.showToast(t('nameUpdated', name));
     },
 
-    playPing() {
-        if (localStorage.getItem('bm_silent') === 'true') return;
+    showSwitchHousehold() {
+        this.closeSettings();
+        const modal = document.getElementById('modal');
+        const overlay = document.getElementById('modalOverlay');
+        modal.innerHTML = `
+            <div style="text-align:center;padding:8px 0 16px;">
+                <div style="font-size:48px;margin-bottom:12px;">🏠</div>
+                <h3 style="margin:0 0 6px;">${t('joinAHousehold')}</h3>
+                <p class="modal-sub">${t('enterPartnerCode')}</p>
+                <div style="display:flex;gap:8px;margin-top:16px;">
+                    <input type="text" id="switchCodeInput" placeholder="${t('enterHouseholdCode')}" maxlength="6"
+                        style="flex:1;padding:13px 14px;border:1.5px solid #e5e7eb;border-radius:12px;font-size:16px;text-transform:uppercase;letter-spacing:2px;outline:none;text-align:center;"
+                        oninput="this.value=this.value.toUpperCase()">
+                    <button onclick="App.confirmSwitchHousehold()" style="padding:13px 18px;background:#16a34a;color:white;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;">${t('join')}</button>
+                </div>
+                <p id="switchError" style="color:#dc2626;font-size:13px;margin:8px 0 0;display:none;"></p>
+                <div class="modal-actions">
+                    <button class="modal-btn cancel" onclick="Utils.closeModal()">${t('cancel')}</button>
+                </div>
+            </div>`;
+        overlay.classList.add('show');
+        setTimeout(() => document.getElementById('switchCodeInput')?.focus(), 100);
+    },
+
+    async confirmSwitchHousehold() {
+        const input = document.getElementById('switchCodeInput');
+        const error = document.getElementById('switchError');
+        const code = input.value.trim().toUpperCase();
+        if (code.length < 6) {
+            input.style.borderColor = '#dc2626';
+            error.textContent = 'Please enter a 6-character code.';
+            error.style.display = 'block';
+            return;
+        }
         try {
-            const AudioContext = window.AudioContext || window.webkitAudioContext;
-            if (!AudioContext) return;
-            const ctx = new AudioContext();
-            const play = () => {
-                const osc = ctx.createOscillator();
-                const gain = ctx.createGain();
-                osc.connect(gain);
-                gain.connect(ctx.destination);
-                osc.type = 'sine';
-                osc.frequency.setValueAtTime(880, ctx.currentTime);
-                osc.frequency.exponentialRampToValueAtTime(1200, ctx.currentTime + 0.1);
-                gain.gain.setValueAtTime(0.4, ctx.currentTime);
-                gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.4);
-                osc.start(ctx.currentTime);
-                osc.stop(ctx.currentTime + 0.4);
-            };
-            if (ctx.state === 'suspended') { ctx.resume().then(play); } else { play(); }
-        } catch (e) { }
+            input.disabled = true;
+            error.style.display = 'none';
+            await API.joinHousehold(code);
+            Utils.closeModal();
+            Utils.showToast(t('switchedHousehold'));
+            if (API.eventSource) { API.eventSource.close(); API.eventSource = null; }
+            API.connectSSE();
+        } catch (e) {
+            input.disabled = false;
+            input.style.borderColor = '#dc2626';
+            error.textContent = 'Household not found. Check the code and try again.';
+            error.style.display = 'block';
+        }
     },
 
-    async toggleShopItem(id) {
-        // Debounce — prevent double taps
-        if (this._tappedItems && this._tappedItems.has(id)) return;
-        if (!this._tappedItems) this._tappedItems = new Set();
-        this._tappedItems.add(id);
-        setTimeout(() => this._tappedItems.delete(id), 1500);
+    toggleSilentMode() {
+        const current = localStorage.getItem('bm_silent') === 'true';
+        const newVal = !current;
+        localStorage.setItem('bm_silent', newVal);
+        const toggle = document.getElementById('silentModeToggle');
+        const thumb = document.getElementById('silentModeThumb');
+        const silentSub = document.getElementById('silentModeSub');
+        if (toggle) toggle.style.background = newVal ? '#005EA5' : '#e5e7eb';
+        if (thumb) thumb.style.left = newVal ? '22px' : '2px';
+        if (silentSub) silentSub.textContent = newVal ? t('soundsMuted') : t('muteSounds');
+        Utils.showToast(newVal ? t('silentOn') : t('silentOff'));
+    },
 
-        try {
-            const result = await API.toggleCheck(id);
-            if (result && result.isChecked) {
-                this.playPing();
-                // Animate the item out FIRST before re-rendering
-                const el = document.querySelector(`.shop-item[onclick="App.toggleShopItem(${id})"]`);
-                if (el) {
-                    el.style.transition = 'all 0.4s cubic-bezier(0.4,0,0.2,1)';
-                    el.style.transform = 'translateX(110%)';
-                    el.style.opacity = '0';
-                    el.style.overflow = 'hidden';
-                    const h = el.offsetHeight;
-                    setTimeout(() => {
-                        el.style.maxHeight = h + 'px';
-                        requestAnimationFrame(() => {
-                            el.style.maxHeight = '0';
-                            el.style.padding = '0';
-                            el.style.marginBottom = '0';
-                        });
-                    }, 350);
-                }
-                // Update state and delete after animation completes
-                setTimeout(async () => {
-                    const idx = API.items.findIndex(i => i.id === id);
-                    if (idx !== -1) API.items[idx].isChecked = true;
-                    try { await API.deleteItem(id); } catch (e) { }
-                    API.items = API.items.filter(i => i.id !== id);
-                    this.renderShoppingModeList();
-                }, 750);
-            } else {
-                this.renderShoppingModeList();
-            }
-        } catch (e) { console.log('toggleShopItem error:', e); }
+    showLanguageSelector() {
+        this.closeSettings();
+        const modal = document.getElementById('modal');
+        const overlay = document.getElementById('modalOverlay');
+        const currentLang = localStorage.getItem('bm_language') || 'en';
+        const langOptions = LANGUAGES.map(l =>
+            `<button onclick="App.changeLanguage('${l.code}')"
+                style="display:flex;align-items:center;gap:12px;padding:14px 16px;border:2px solid ${l.code === currentLang ? '#005EA5' : '#e5e7eb'};border-radius:12px;background:${l.code === currentLang ? '#f0f9ff' : 'white'};font-size:16px;cursor:pointer;text-align:left;width:100%;margin-bottom:8px;">
+                <span style="font-size:28px;">${l.flag}</span>
+                <span style="font-weight:600;color:#1a1a2e;">${l.name}</span>
+                ${l.code === currentLang ? '<span style="margin-left:auto;color:#005EA5;font-weight:700;">✓</span>' : ''}
+            </button>`
+        ).join('');
+        modal.innerHTML = `
+            <div style="padding:8px 0 16px;">
+                <div style="text-align:center;font-size:48px;margin-bottom:12px;">🌍</div>
+                <h3 style="text-align:center;margin:0 0 16px;">Language</h3>
+                ${langOptions}
+                <button class="modal-btn cancel" onclick="Utils.closeModal()" style="width:100%;margin-top:8px;">${t('cancel')}</button>
+            </div>`;
+        overlay.classList.add('show');
+    },
+
+    changeLanguage(code) {
+        localStorage.setItem('bm_language', code);
+        document.body.dir = code === 'ur' ? 'rtl' : 'ltr';
+        App.applyTranslations();
+        Utils.closeModal();
+        UI.renderHome();
+        if (API.currentStoreId) {
+            UI.renderAisles();
+            UI.renderList();
+        }
+        const langSub = document.getElementById('currentLanguageSub');
+        if (langSub) {
+            const found = LANGUAGES.find(l => l.code === code);
+            if (found) langSub.textContent = `${found.name} ${found.flag}`;
+        }
+    },
+
+    showHelp() {
+        this.closeSettings();
+        const modal = document.getElementById('modal');
+        const overlay = document.getElementById('modalOverlay');
+        modal.innerHTML = `
+            <h3>📖 How to Use BasketMate</h3>
+            <div style="margin-top:16px;">
+                <div class="help-section">
+                    <div class="help-icon">🏪</div>
+                    <div><div class="help-title">Choose a Store</div><div class="help-text">Tap a store on the home screen to open its shopping list.</div></div>
+                </div>
+                <div class="help-section">
+                    <div class="help-icon">🗂️</div>
+                    <div><div class="help-title">Add Items via Aisles</div><div class="help-text">Tap an aisle on the left, then tap a product to add it to your list.</div></div>
+                </div>
+                <div class="help-section">
+                    <div class="help-icon">⭐</div>
+                    <div><div class="help-title">Save Favourites</div><div class="help-text">Tap the ⭐ next to any product to save it. Find all favourites in the Favourites tab.</div></div>
+                </div>
+                <div class="help-section">
+                    <div class="help-icon">🛒</div>
+                    <div><div class="help-title">Shopping Mode</div><div class="help-text">Tap the cart button at the bottom to enter shopping mode — tap items to check them off.</div></div>
+                </div>
+                <div class="help-section">
+                    <div class="help-icon">🏠</div>
+                    <div><div class="help-title">Share with Family</div><div class="help-text">Go to Settings → My Household Code and share the 6-letter code with family members.</div></div>
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button class="modal-btn cancel" onclick="Utils.closeModal()">Close</button>
+            </div>`;
+        overlay.classList.add('show');
+    },
+
+    showUpgradePrompt(message) {
+        this.closeSettings();
+        const modal = document.getElementById('modal');
+        const overlay = document.getElementById('modalOverlay');
+        const msg = message || 'Upgrade to BasketMate Family for unlimited stores, aisles, and products.';
+        modal.innerHTML = `
+            <div style="text-align:center;padding:8px 0 16px;">
+                <div style="font-size:48px;margin-bottom:12px;">⭐</div>
+                <h3 style="margin:0 0 8px;">Upgrade to Family</h3>
+                <p class="modal-sub">${msg}</p>
+                <div style="background:#fef9c3;border-radius:12px;padding:16px;margin:20px 0;">
+                    <div style="font-size:28px;font-weight:900;color:#d97706;">£2.99</div>
+                    <div style="font-size:13px;color:#92400e;margin-top:4px;">One-time payment — yours forever</div>
+                </div>
+                <ul style="text-align:left;list-style:none;padding:0;margin:0 0 20px;">
+                    <li style="padding:6px 0;font-size:14px;">✅ Unlimited stores</li>
+                    <li style="padding:6px 0;font-size:14px;">✅ Unlimited aisles per store</li>
+                    <li style="padding:6px 0;font-size:14px;">✅ Unlimited products per aisle</li>
+                    <li style="padding:6px 0;font-size:14px;">✅ All family members included</li>
+                </ul>
+                <button onclick="App.processPurchase()" style="width:100%;padding:14px;background:#d97706;color:white;border:none;border-radius:12px;font-size:16px;font-weight:700;cursor:pointer;margin-bottom:10px;">Upgrade Now — £2.99</button>
+                <button class="modal-btn cancel" onclick="Utils.closeModal()" style="width:100%;">${t('cancel')}</button>
+            </div>`;
+        overlay.classList.add('show');
+    },
+
+    async processPurchase() {
+        // Placeholder — integrate with Google Play Billing when ready
+        Utils.showToast('Purchase coming soon!', true);
     }
 });
