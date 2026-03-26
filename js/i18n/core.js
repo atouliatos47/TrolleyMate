@@ -77,10 +77,43 @@ const AISLE_NAMES = {
         'Pets':            'پالتو جانور',
         'Household':       'گھریلو',
     },
-    // Placeholder for new languages (you can fill these later)
-    pa: {},
-    bn: {},
-    zh: {}
+    // New languages - Aisle translations
+    pa: {
+        'Bakery':          'ਬੇਕਰੀ',
+        'Fresh Food':      'ਤਾਜ਼ਾ ਖਾਣਾ',
+        'Frozen Food':     'ਫ੍ਰੋਜ਼ਨ ਫੂਡ',
+        'Treats & Snacks': 'ਮਿਠਾਈ ਅਤੇ ਸਨੈਕਸ',
+        'Food Cupboard':   'ਖਾਣਾ ਰੱਖਣ ਵਾਲੀ ਅਲਮਾਰੀ',
+        'Drinks':          'ਪੀਣ ਵਾਲੀਆਂ ਚੀਜ਼ਾਂ',
+        'Baby & Toddler':  'ਬੱਚੇ ਅਤੇ ਟਾਡਲਰ',
+        'Health & Beauty': 'ਸਿਹਤ ਅਤੇ ਸੁੰਦਰਤਾ',
+        'Pets':            'ਪਾਲਤੂ ਜਾਨਵਰ',
+        'Household':       'ਘਰੇਲੂ',
+    },
+    bn: {
+        'Bakery':          'বেকারি',
+        'Fresh Food':      'তাজা খাবার',
+        'Frozen Food':     'ফ্রোজেন খাবার',
+        'Treats & Snacks': 'মিষ্টি ও স্ন্যাকস',
+        'Food Cupboard':   'খাবারের আলমারি',
+        'Drinks':          'পানীয়',
+        'Baby & Toddler':  'শিশু ও টডলার',
+        'Health & Beauty': 'স্বাস্থ্য ও সৌন্দর্য',
+        'Pets':            'পোষা প্রাণী',
+        'Household':       'ঘরোয়া',
+    },
+    zh: {
+        'Bakery':          '面包房',
+        'Fresh Food':      '新鲜食品',
+        'Frozen Food':     '冷冻食品',
+        'Treats & Snacks': '零食和甜点',
+        'Food Cupboard':   '食品储藏柜',
+        'Drinks':          '饮料',
+        'Baby & Toddler':  '婴儿和幼儿',
+        'Health & Beauty': '健康与美容',
+        'Pets':            '宠物用品',
+        'Household':       '家居用品',
+    }
 };
 
 function translateAisleName(name) {
