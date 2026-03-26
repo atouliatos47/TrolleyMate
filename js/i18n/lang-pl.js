@@ -70,6 +70,7 @@ TRANSLATIONS.pl = {
     emoji: 'Emoji',
     colour: 'Kolor',
     cancel: 'Anuluj',
+    save: 'Zapisz',
     addStore2: 'Dodaj sklep',
     deleteStore: '🗑 Usuń sklep',
     deleteStoreConfirm: (name) => `Usunąć ${name}? Wszystkie alejki i lista zostaną utracone.`,

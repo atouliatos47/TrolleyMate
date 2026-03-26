@@ -70,6 +70,7 @@ TRANSLATIONS.en = {
     emoji: 'Emoji',
     colour: 'Colour',
     cancel: 'Cancel',
+    save: 'Save',
     addStore2: 'Add Store',
     deleteStore: '🗑 Delete Store',
     deleteStoreConfirm: (name) => `Delete ${name}? All its aisles and shopping list will be lost.`,

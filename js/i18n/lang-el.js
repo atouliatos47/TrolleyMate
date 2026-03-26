@@ -70,6 +70,7 @@ TRANSLATIONS.el = {
     emoji: 'Emoji',
     colour: 'Χρώμα',
     cancel: 'Άκυρο',
+    save: 'Αποθήκευση',
     addStore2: 'Προσθήκη',
     deleteStore: '🗑 Διαγραφή καταστήματος',
     deleteStoreConfirm: (name) => `Διαγραφή ${name}; Όλα τα δεδομένα θα χαθούν.`,

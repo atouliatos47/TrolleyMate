@@ -62,6 +62,7 @@ TRANSLATIONS.ur = {
     emoji: 'ایموجی',
     colour: 'رنگ',
     cancel: 'منسوخ',
+    save: 'محفوظ کریں',
     addStore2: 'دکان شامل کریں',
     deleteStore: '🗑 دکان حذف کریں',
     deleteStoreConfirm: (name) => `${name} حذف کریں؟ تمام ڈیٹا ضائع ہو جائے گا۔`,

@@ -70,6 +70,7 @@ TRANSLATIONS.ro = {
     emoji: 'Emoji',
     colour: 'Culoare',
     cancel: 'Anulează',
+    save: 'Salvează',
     addStore2: 'Adaugă magazin',
     deleteStore: '🗑 Șterge magazin',
     deleteStoreConfirm: (name) => `Ștergi ${name}? Toate raioanele și lista vor fi pierdute.`,
