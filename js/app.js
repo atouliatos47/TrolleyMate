@@ -201,13 +201,20 @@ const App = {
     async createHousehold() {
         try {
             const btn = document.querySelector('#modal button');
-            if (btn) { btn.disabled = true; btn.textContent = 'Creating...'; }
+            if (btn) {
+                btn.disabled = true;
+                btn.textContent = t('creating') || 'Δημιουργία...';   // Force Greek fallback for testing
+            }
+
             const data = await API.createHousehold();
             this.showHouseholdCode(data.code);
         } catch (e) {
             Utils.showToast('Failed to create household', true);
             const btn = document.querySelector('#modal button');
-            if (btn) { btn.disabled = false; btn.textContent = t('createNewHousehold'); }
+            if (btn) {
+                btn.disabled = false;
+                btn.textContent = t('createNewHousehold');
+            }
         }
     },
 
