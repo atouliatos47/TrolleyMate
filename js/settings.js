@@ -115,6 +115,8 @@ Object.assign(App, {
         const modal = document.getElementById('modal');
         const overlay = document.getElementById('modalOverlay');
 
+        console.log('Save button translation test:', t('save'));   // ← Debug line
+
         modal.innerHTML = `
             <div style="text-align:center;padding:8px 0 16px;">
                 <div style="font-size:48px;margin-bottom:12px;">👤</div>
@@ -124,11 +126,15 @@ Object.assign(App, {
                     onkeypress="if(event.key==='Enter') App.saveChangedName()">
                 <div class="modal-actions">
                     <button class="modal-btn cancel" onclick="Utils.closeModal()">${t('cancel')}</button>
-                    <button class="modal-btn confirm" onclick="App.saveChangedName()">Save</button>
+                    <button class="modal-btn confirm" onclick="App.saveChangedName()">${t('save') || 'Save'}</button>
                 </div>
             </div>`;
         overlay.classList.add('show');
-        setTimeout(() => document.getElementById('changeNameInput')?.focus(), 100);
+
+        setTimeout(() => {
+            const input = document.getElementById('changeNameInput');
+            if (input) { input.focus(); input.select(); }
+        }, 100);
     },
 
     saveChangedName() {
