@@ -5,6 +5,7 @@ TRANSLATIONS.el = {
     appName: 'BasketMate',
     tagline: 'Ο έξυπνος βοηθός αγορών σου',
     byAtStudios: 'από το AtStudios',
+
     whereShoppingToday: 'Πού ψωνίζεις σήμερα;',
     liveStatus: '● Ζωντανά',
     connectingStatus: '○ Σύνδεση',
@@ -12,10 +13,12 @@ TRANSLATIONS.el = {
     itemsInList: (n) => `${n} προϊόν${n > 1 ? 'τα' : ''} στη λίστα`,
     productsCount: (n) => `${n} προϊόντα`,
     noProducts: 'Κανένα προϊόν',
+
     addStore: 'Προσθήκη καταστήματος',
     myCode: 'Ο κωδικός μου',
     myList: 'Η λίστα μου',
     addProduct: 'Προσθήκη προϊόντος',
+
     aisles: 'ΔΙΑΔΡΟΜΟΙ',
     tapAisleToAdd: 'Πατήστε διάδρομο για προσθήκη',
     list: 'Λίστα',
@@ -25,19 +28,23 @@ TRANSLATIONS.el = {
     noFavouritesYet: 'Δεν υπάρχουν αγαπημένα!',
     tapStarToSave: 'Πατήστε ⭐ σε προϊόν για αποθήκευση.',
     collectedOf: (checked, total) => `${checked} από ${total} συλλέχθηκαν`,
+
     noProductsYet: 'Δεν υπάρχουν προϊόντα',
     addFirstProduct: 'Χρησιμοποιήστε το παρακάτω για το πρώτο προϊόν.',
     inList: '✓ Στη λίστα',
     add: '+ Προσθήκη',
+
     shoppingList: '🛒 Λίστα αγορών',
     allShoppingLists: 'Όλες οι λίστες αγορών',
     allDone: 'Τέλεια! Η λίστα είναι άδεια.',
     items: (n) => `${n} προϊόν${n !== 1 ? 'τα' : ''}`,
+
     settings: '⚙️ Ρυθμίσεις',
-    Language: 'Γλώσσα',
+    Language: 'Γλώσσα',                    // ← Added
     myHouseholdCode: 'Κωδικός νοικοκυριού',
     shareWithFamily: 'Μοιραστείτε με την οικογένεια',
     changeMyName: 'Αλλαγή ονόματος',
+    yourNameOnSharedLists: 'Το όνομά σας στις κοινές λίστες',
     signedInAs: (name) => `Συνδεδεμένος ως ${name}`,
     joinAHousehold: 'Εγγραφή σε νοικοκυριό',
     enterPartnerCode: 'Εισάγετε κωδικό συντρόφου',
@@ -55,6 +62,7 @@ TRANSLATIONS.el = {
     familyPlan: '✅ BasketMate Family',
     familyPlanSub: 'Έχετε πλήρη πρόσβαση — ευχαριστούμε!',
     version: 'BasketMate v1.0',
+
     addNewStore: '🏪 Νέο κατάστημα',
     addNewStoreSubtitle: 'Προσθέστε σούπερ μάρκετ ή κατάστημα',
     storeName: 'Όνομα καταστήματος',
@@ -74,6 +82,7 @@ TRANSLATIONS.el = {
     remove: 'Αφαίρεση',
     addProduct2: '➕ Προσθήκη προϊόντος',
     addProductPlaceholder: 'π.χ. Ψωμί...',
+
     welcomeToBasketMate: 'Καλώς ήρθατε στο BasketMate',
     createOrJoin: 'Δημιουργήστε νοικοκυριό για να ξεκινήσετε\nή εγγραφείτε με κωδικό.',
     createNewHousehold: '✨ Δημιουργία νοικοκυριού',
@@ -87,9 +96,7 @@ TRANSLATIONS.el = {
     nameSoFamily: 'Για να ξέρει η οικογένεια ποιος πρόσθεσε προϊόντα.',
     namePlaceholder: 'π.χ. Ανδρέας, Σαρών...',
     letsGo: 'Πάμε! 🛒',
-    welcomeUser: (name) => `Καλώς ήρθες, ${name}!`,
-    readyMsg: 'Ο έξυπνος βοηθός αγορών σου είναι έτοιμος.',
-    takingYou: 'Πηγαίνουμε στη λίστα σου...',
+
     addedToList: (name) => `${name} προστέθηκε! 🛒`,
     removedFromList: (name) => `${name} αφαιρέθηκε ✓`,
     addedToAisle: (name) => `${name} προστέθηκε στον διάδρομο ✓`,

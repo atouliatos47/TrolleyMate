@@ -5,6 +5,7 @@ TRANSLATIONS.ro = {
     appName: 'BasketMate',
     tagline: 'Tovarășul tău inteligent de cumpărături',
     byAtStudios: 'de AtStudios',
+
     whereShoppingToday: 'Unde faci cumpărăturile azi?',
     liveStatus: '● Live',
     connectingStatus: '○ Conectare',
@@ -12,10 +13,12 @@ TRANSLATIONS.ro = {
     itemsInList: (n) => `${n} produs${n > 1 ? 'e' : ''} în listă`,
     productsCount: (n) => `${n} produse`,
     noProducts: 'Niciun produs',
+
     addStore: 'Adaugă magazin',
     myCode: 'Codul meu',
     myList: 'Lista mea',
     addProduct: 'Adaugă produs',
+
     aisles: 'RAIOANE',
     tapAisleToAdd: 'Apasă un raion pentru a adăuga produse',
     list: 'Listă',
@@ -25,19 +28,23 @@ TRANSLATIONS.ro = {
     noFavouritesYet: 'Nicio favorită încă!',
     tapStarToSave: 'Apasă ⭐ pe orice produs pentru a salva.',
     collectedOf: (checked, total) => `${checked} din ${total} colectate`,
+
     noProductsYet: 'Niciun produs încă',
     addFirstProduct: 'Folosește câmpul de mai jos pentru primul produs.',
     inList: '✓ În listă',
     add: '+ Adaugă',
+
     shoppingList: '🛒 Listă de cumpărături',
     allShoppingLists: 'Toate listele de cumpărături',
     allDone: 'Gata! Lista este goală.',
     items: (n) => `${n} produs${n !== 1 ? 'e' : ''}`,
+
     settings: '⚙️ Setări',
-    Language: 'Limbă',
+    Language: 'Limbă',                    // ← Added
     myHouseholdCode: 'Codul gospodăriei mele',
     shareWithFamily: 'Împărtășește cu familia pentru a se alătura',
     changeMyName: 'Schimbă numele meu',
+    yourNameOnSharedLists: 'Numele tău pe listele partajate',
     signedInAs: (name) => `Conectat ca ${name}`,
     joinAHousehold: 'Alătură-te unei gospodării',
     enterPartnerCode: 'Introdu codul partenerului pentru a partaja lista',
@@ -55,6 +62,7 @@ TRANSLATIONS.ro = {
     familyPlan: '✅ BasketMate Family',
     familyPlanSub: 'Ai acces complet — mulțumim!',
     version: 'BasketMate v1.0',
+
     addNewStore: '🏪 Adaugă magazin nou',
     addNewStoreSubtitle: 'Adaugă un supermarket sau magazin',
     storeName: 'Numele magazinului',
@@ -74,6 +82,7 @@ TRANSLATIONS.ro = {
     remove: 'Elimină',
     addProduct2: '➕ Adaugă produs',
     addProductPlaceholder: 'ex. Pâine albă...',
+
     welcomeToBasketMate: 'Bun venit la BasketMate',
     createOrJoin: 'Creează o gospodărie pentru a începe\nsau alătură-te cu un cod.',
     createNewHousehold: '✨ Creează gospodărie nouă',
@@ -87,9 +96,7 @@ TRANSLATIONS.ro = {
     nameSoFamily: 'Ca familia să știe cine a adăugat produse.',
     namePlaceholder: 'ex. Andrei, Maria...',
     letsGo: 'Să mergem! 🛒',
-    welcomeUser: (name) => `Bun venit, ${name}!`,
-    readyMsg: 'Tovarășul tău inteligent de cumpărături este gata.',
-    takingYou: 'Te ducem la lista ta...',
+
     addedToList: (name) => `${name} adăugat! 🛒`,
     removedFromList: (name) => `${name} eliminat ✓`,
     addedToAisle: (name) => `${name} adăugat în raion ✓`,
