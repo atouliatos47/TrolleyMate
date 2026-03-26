@@ -14,13 +14,16 @@ function t(key, ...args) {
     return value || key;
 }
 
-// Available languages — add new entries here when adding a language
+// Available languages
 const LANGUAGES = [
     { code: 'en', name: 'English',    flag: '🇬🇧' },
     { code: 'pl', name: 'Polski',     flag: '🇵🇱' },
     { code: 'ro', name: 'Română',     flag: '🇷🇴' },
-    { code: 'el', name: 'Ελληνικά',  flag: '🇬🇷' },
+    { code: 'el', name: 'Ελληνικά',   flag: '🇬🇷' },
     { code: 'ur', name: 'اردو',       flag: '🇵🇰' },
+    { code: 'pa', name: 'ਪੰਜਾਬੀ',     flag: '🇮🇳' },   // Punjabi (Indian)
+    { code: 'bn', name: 'বাংলা',       flag: '🇧🇩' },   // Bengali
+    { code: 'zh', name: '中文',        flag: '🇨🇳' }    // Simplified Chinese
 ];
 
 // Aisle name translations (plain text keys for reliable matching)
@@ -74,6 +77,10 @@ const AISLE_NAMES = {
         'Pets':            'پالتو جانور',
         'Household':       'گھریلو',
     },
+    // Placeholder for new languages (you can fill these later)
+    pa: {},
+    bn: {},
+    zh: {}
 };
 
 function translateAisleName(name) {
