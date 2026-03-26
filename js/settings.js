@@ -268,12 +268,41 @@ Object.assign(App, {
         const overlay = document.getElementById('modalOverlay');
         
         modal.innerHTML = `
-            <h3>${t('howToUse')}</h3>
-            <div style="margin-top:16px; font-size:15px; line-height:1.5;">
-                <p><strong>🏪 Choose a Store</strong><br>Tap a store on the home screen.</p>
-                <p><strong>🗂️ Add Items</strong><br>Tap an aisle, then tap products.</p>
-                <p><strong>⭐ Favourites</strong><br>Tap the star to save products.</p>
-                <p><strong>🛒 Shopping Mode</strong><br>Tap the cart icon at the bottom.</p>
+            <h3 style="margin-bottom:20px;">${t('howToUse')}</h3>
+            <div style="margin-top:8px; font-size:15px; line-height:1.6; color:#374151;">
+                
+                <div style="display:flex; gap:12px; margin-bottom:16px;">
+                    <div style="font-size:24px; flex-shrink:0;">🏪</div>
+                    <div>
+                        <strong>Choose a Store</strong><br>
+                        <span style="color:#6b7280;">Tap a store on the home screen to open its shopping list.</span>
+                    </div>
+                </div>
+
+                <div style="display:flex; gap:12px; margin-bottom:16px;">
+                    <div style="font-size:24px; flex-shrink:0;">🗂️</div>
+                    <div>
+                        <strong>Add Items</strong><br>
+                        <span style="color:#6b7280;">Tap an aisle, then tap products to add them to your list.</span>
+                    </div>
+                </div>
+
+                <div style="display:flex; gap:12px; margin-bottom:16px;">
+                    <div style="font-size:24px; flex-shrink:0;">⭐</div>
+                    <div>
+                        <strong>Favourites</strong><br>
+                        <span style="color:#6b7280;">Tap the star next to any product to save it for quick access later.</span>
+                    </div>
+                </div>
+
+                <div style="display:flex; gap:12px; margin-bottom:20px;">
+                    <div style="font-size:24px; flex-shrink:0;">🛒</div>
+                    <div>
+                        <strong>Shopping Mode</strong><br>
+                        <span style="color:#6b7280;">Tap the cart icon at the bottom to enter shopping mode — tap items to check them off as you shop.</span>
+                    </div>
+                </div>
+
             </div>
             <div class="modal-actions">
                 <button class="modal-btn cancel" onclick="Utils.closeModal()">${t('cancel')}</button>
