@@ -41,6 +41,7 @@ TRANSLATIONS.en = {
 
     // ==================== SETTINGS ====================
     settings: '⚙️ Settings',
+    Language: 'Language',
     myHouseholdCode: 'My Household Code',
     shareWithFamily: 'Share with family to join your list',
     changeMyName: 'Change My Name',

@@ -41,6 +41,7 @@ TRANSLATIONS.pl = {
 
     // ==================== SETTINGS ====================
     settings: '⚙️ Ustawienia',
+    Language: 'Język',
     myHouseholdCode: 'Kod mojego gospodarstwa',
     shareWithFamily: 'Udostępnij rodzinie, aby dołączyć do listy',
     changeMyName: 'Zmień swoje imię',
