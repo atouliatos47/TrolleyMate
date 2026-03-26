@@ -28,8 +28,20 @@ Object.assign(App, {
             if (found) langSub.textContent = `${found.name} ${found.flag}`;
         }
 
-        // Upgrade/Trial
+        // Upgrade/Trial section - make it clickable
         this._updateUpgradeSettingsItem();
+
+        // Make the trial/upgrade row tappable
+        const upgradeRow = document.getElementById('upgradeSettingsRow');
+        if (upgradeRow) {
+            upgradeRow.style.cursor = 'pointer';
+            upgradeRow.onclick = () => {
+                this.closeSettings();
+                setTimeout(() => {
+                    App.showUpgradePrompt();
+                }, 300);
+            };
+        }
 
         // Translate ALL settings items
         this.translateSettingsPanel();
@@ -319,8 +331,25 @@ Object.assign(App, {
     },
 
     showUpgradePrompt() {
-        // Your existing upgrade prompt...
-        this.closeSettings();
-        // ... (keep your current code for this function)
-    }
+        const modal = document.getElementById('modal');
+        const overlay = document.getElementById('modalOverlay');
+
+        modal.innerHTML = `
+            <div style="text-align:center;padding:20px 8px;">
+                <div style="font-size:48px;margin-bottom:16px;">⭐</div>
+                <h3 style="margin:0 0 12px;">Upgrade to BasketMate Family</h3>
+                <p style="color:#6b7280;margin:0 0 24px;">Unlock unlimited stores, aisles, and products.<br>One-time payment of £2.99</p>
+                
+                <button onclick="Utils.closeModal()" 
+                    style="width:100%;padding:14px;background:#005EA5;color:white;border:none;border-radius:12px;font-size:16px;font-weight:700;cursor:pointer;margin-bottom:12px;">
+                    Upgrade Now (£2.99)
+                </button>
+                
+                <button onclick="Utils.closeModal()" 
+                    style="width:100%;padding:14px;background:transparent;color:#6b7280;border:1.5px solid #e5e7eb;border-radius:12px;font-size:16px;cursor:pointer;">
+                    Maybe Later
+                </button>
+            </div>`;
+        overlay.classList.add('show');
+    },
 });
