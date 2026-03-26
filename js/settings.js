@@ -295,11 +295,19 @@ Object.assign(App, {
                     </div>
                 </div>
 
-                <div style="display:flex; gap:12px; margin-bottom:20px;">
+                <div style="display:flex; gap:12px; margin-bottom:16px;">
                     <div style="font-size:24px; flex-shrink:0;">🛒</div>
                     <div>
                         <strong>Shopping Mode</strong><br>
                         <span style="color:#6b7280;">Tap the cart icon at the bottom to enter shopping mode — tap items to check them off as you shop.</span>
+                    </div>
+                </div>
+
+                <div style="display:flex; gap:12px; margin-bottom:20px;">
+                    <div style="font-size:24px; flex-shrink:0;">🔄</div>
+                    <div>
+                        <strong>Reorder Aisles</strong><br>
+                        <span style="color:#6b7280;">Long-press an aisle and drag it up or down to reorder when the supermarket changes its layout.</span>
                     </div>
                 </div>
 
