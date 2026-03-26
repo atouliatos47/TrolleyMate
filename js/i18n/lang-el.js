@@ -116,5 +116,6 @@ TRANSLATIONS.el = {
     nameUpdated: (name) => `Το όνομα ενημερώθηκε σε ${name} ✓`,
     savedAsFavourite: (name) => `${name} αποθηκεύτηκε ως αγαπημένο ⭐`,
     removedFromFavourites: (name) => `${name} αφαιρέθηκε από αγαπημένα`,
-    save: 'Αποθήκευση'
+    save: 'Αποθήκευση',
+    creating: 'Δημιουργία...'
 };
