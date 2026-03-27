@@ -1,81 +1,19 @@
-const CACHE_NAME = 'basketmate-v14';
-const STATIC_ASSETS = [
-    '/',
-    '/index.html',
-    '/manifest.json',
-    '/css/style.css',
-    '/js/utils.js',
-    '/js/api.js',
-    '/js/ui.js',
-    '/js/app.js',
-    '/js/stores.js',
-    '/js/shopping.js',
-    '/js/settings.js',
-    '/js/i18n/core.js',
-    '/js/i18n/lang-en.js',
-    '/js/i18n/lang-pl.js',
-    '/js/i18n/lang-ro.js',
-    '/js/i18n/lang-el.js',
-    '/js/i18n/lang-ur.js',
-    '/img/icon-192.png',
-    '/img/icon-512.png',
-    '/img/atstudios-logo.jpg'
-];
+// BasketMate Service Worker — network only, no caching
+// Unregisters old cache-heavy versions automatically
 
-self.addEventListener('install', e => {
-    e.waitUntil(
-        caches.open(CACHE_NAME).then(cache =>
-            Promise.allSettled(STATIC_ASSETS.map(url => cache.add(url).catch(() => { })))
-        )
-    );
-    self.skipWaiting();
-});
+self.addEventListener('install', () => self.skipWaiting());
 
 self.addEventListener('activate', e => {
     e.waitUntil(
-        caches.keys().then(keys =>
-            Promise.all(keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k)))
-        )
+        caches.keys()
+            .then(keys => Promise.all(keys.map(k => caches.delete(k))))
+            .then(() => self.clients.claim())
     );
-    self.clients.claim();
 });
 
 self.addEventListener('fetch', e => {
-    const url = e.request.url;
-
-    // Always network for API/SSE
-    if (url.includes('/events') || url.includes('/items') || url.includes('/aisles') ||
-        url.includes('/push') || url.includes('/households') ||
-        url.includes('/favourites') || url.includes('/stores')) {
-        return;
-    }
-
-    // Network-first for JS and HTML — always gets fresh code on deploy
-    if (e.request.destination === 'script' || e.request.destination === 'document') {
-        e.respondWith(
-            fetch(e.request)
-                .then(response => {
-                    const clone = response.clone();
-                    caches.open(CACHE_NAME).then(cache => cache.put(e.request, clone));
-                    return response;
-                })
-                .catch(() => caches.match(e.request))
-        );
-        return;
-    }
-
-    // Cache-first for CSS and images
-    if (e.request.destination === 'style' || e.request.destination === 'image') {
-        e.respondWith(
-            caches.match(e.request).then(cached => cached || fetch(e.request))
-        );
-        return;
-    }
-
-    // Network-first for everything else
-    e.respondWith(
-        fetch(e.request).catch(() => caches.match(e.request))
-    );
+    // Always go to network — no caching
+    e.respondWith(fetch(e.request).catch(() => new Response('Offline', { status: 503 })));
 });
 
 self.addEventListener('push', e => {

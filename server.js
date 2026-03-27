@@ -1,4 +1,3 @@
-require('dotenv').config();
 const http    = require('http');
 const fs      = require('fs').promises;
 const path    = require('path');
@@ -143,7 +142,13 @@ const server = http.createServer(async (req, res) => {
     if (pathname.startsWith('/js/') && pathname.endsWith('.js')) return serveFile(res, path.join(APP_DIR, pathname), 'application/javascript');
     if (pathname.startsWith('/img/'))  return serveFile(res, path.join(APP_DIR, pathname), 'image/png');
     if (pathname === '/manifest.json') return serveFile(res, path.join(APP_DIR, 'manifest.json'), 'application/manifest+json');
-    if (pathname === '/sw.js')         return serveFile(res, path.join(APP_DIR, 'sw.js'), 'application/javascript');
+    if (pathname === '/sw.js') {
+        try {
+            const data = await fs.readFile(path.join(APP_DIR, 'sw.js'));
+            res.writeHead(200, { 'Content-Type': 'application/javascript', 'Cache-Control': 'no-store' });
+            return res.end(data);
+        } catch { res.writeHead(404); return res.end('Not found'); }
+    }
     if (pathname === '/privacy.html' || pathname === '/privacy') return serveFile(res, path.join(APP_DIR, 'privacy.html'), 'text/html');
 
     if (pathname === '/households/create' && method === 'POST') return householdsRoute.create(req, res);
