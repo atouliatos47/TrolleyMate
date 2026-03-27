@@ -50,38 +50,38 @@ const UI = {
             const itemCount = API.items.filter(i => i.storeId === store.id && !i.isChecked).length;
             const initials = store.name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0,2);
             const logoDomain = this.getStoreLogo(store.name);
-            const avatarHtml = logoDomain
-                ? `<div class="store-card-avatar store-card-avatar-logo" id="avatar-${store.id}">
-                       <img src="https://www.google.com/s2/favicons?domain=${logoDomain}&sz=128"
-                           alt="${Utils.escapeHtml(store.name)}"
-                           onload="this.style.opacity=1"
-                           onerror="UI.logoFallback(${store.id},'${initials}','${store.color}')"
-                           style="width:40px;height:40px;object-fit:contain;opacity:0;transition:opacity 0.3s;border-radius:6px;">
-                   </div>`
-                : `<div class="store-card-avatar" style="background:${store.color};">
-                       <span class="store-card-initials">${initials}</span>
-                   </div>`;
 
             return `
-                <div class="store-card-wrapper" style="position:relative;margin-bottom:0;">
-                    <div class="store-card" onclick="App.enterStore(${store.id})"
-                        style="--card-color: ${store.color};">
-                        <div class="store-card-accent" style="background:${store.color};"></div>
-                        <div class="store-card-body">
-                            ${avatarHtml}
-                            <div class="store-card-info">
-                                <div class="store-card-name">${Utils.escapeHtml(store.name)}</div>
-                                <div class="store-card-status ${itemCount ? 'has-items' : ''}">
-                                    ${itemCount ? t('itemsInList', itemCount) : t('listIsEmpty')}
-                                </div>
+                <div style="position:relative;background:white;border-radius:16px;overflow:hidden;box-shadow:var(--shadow-sm);border:1px solid rgba(0,0,0,0.04);cursor:pointer;-webkit-tap-highlight-color:transparent;"
+                    onclick="App.enterStore(${store.id})">
+                    <div style="position:absolute;left:0;top:0;bottom:0;width:4px;background:${store.color};border-radius:16px 0 0 16px;"></div>
+                    <div style="display:flex;flex-direction:column;align-items:center;padding:18px 12px 14px;gap:10px;">
+                        ${logoDomain
+                            ? `<div style="width:48px;height:48px;border-radius:12px;background:white;border:1px solid var(--ink-100);display:flex;align-items:center;justify-content:center;box-shadow:var(--shadow-xs);">
+                                <img src="https://www.google.com/s2/favicons?domain=${logoDomain}&sz=128"
+                                    alt="${Utils.escapeHtml(store.name)}"
+                                    onload="this.style.opacity=1"
+                                    onerror="UI.logoFallback(${store.id},'${initials}','${store.color}')"
+                                    style="width:32px;height:32px;object-fit:contain;opacity:0;transition:opacity 0.3s;border-radius:4px;"
+                                    id="avatar-${store.id}">
+                               </div>`
+                            : `<div style="width:48px;height:48px;border-radius:12px;background:${store.color};display:flex;align-items:center;justify-content:center;">
+                                <span style="font-size:16px;font-weight:800;color:white;letter-spacing:-0.5px;">${initials}</span>
+                               </div>`
+                        }
+                        <div style="text-align:center;width:100%;">
+                            <div style="font-size:13px;font-weight:700;color:var(--text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${Utils.escapeHtml(store.name)}</div>
+                            <div style="font-size:11px;font-weight:500;margin-top:3px;color:${itemCount ? 'var(--green)' : 'var(--text-secondary)'};">
+                                ${itemCount ? t('itemsInList', itemCount) : t('listIsEmpty')}
                             </div>
                         </div>
                     </div>
-                    ${!logoDomain ? `<button class="store-card-delete-outside" onclick="App.confirmDeleteStore(${store.id})" title="Delete store">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                    <button onclick="event.stopPropagation();App.confirmDeleteStore(${store.id})"
+                        style="position:absolute;top:6px;right:6px;width:22px;height:22px;border-radius:50%;background:rgba(0,0,0,0.07);border:none;display:flex;align-items:center;justify-content:center;cursor:pointer;">
+                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none">
                             <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
                         </svg>
-                    </button>` : ''}
+                    </button>
                 </div>`;
         }).join('');
     },
@@ -113,7 +113,7 @@ const UI = {
         const checked = API.storeItems.filter(i => i.isChecked).length;
         const el = document.getElementById('statsBar');
         if (!el) return;
-        el.textContent = total === 0 ? t('listIsEmpty') : `${checked} of ${total} collected`;
+        el.textContent = total === 0 ? 'List is empty' : `${checked} of ${total} collected`;
     },
 
     // ===== AISLES =====
@@ -124,7 +124,7 @@ const UI = {
         const aislesHtml = aisles.length
             ? aisles.sort((a, b) => a.sortOrder - b.sortOrder).map(a => this.renderAisleCard(a)).join('')
             : `<div class="empty-state"><div class="empty-icon">🏪</div><p>No aisles yet!</p><p class="empty-sub">Tap + Add Aisle below.</p></div>`;
-        container.innerHTML = `${aislesHtml}<button class="add-aisle-btn" onclick="UI.showAddAisle()">＋ ${t('addAisle')}</button>`;
+        container.innerHTML = `${aislesHtml}<button class="add-aisle-btn" onclick="UI.showAddAisle()">＋ Add Aisle</button>`;
         this.initSortable(container);
     },
 
@@ -181,8 +181,8 @@ const UI = {
             <div class="aisle-card" data-aisle-id="${aisle.id}" onclick="UI.openAislePanel(${aisle.id})">
                 <div class="aisle-card-header">
                     <div class="aisle-card-meta">
-                        <span class="aisle-card-name">${Utils.escapeHtml(translateAisleName(aisle.name))}</span>
-                        <span class="aisle-card-count">${products.length ? t('productsCount', products.length) : t('noProducts')}</span>
+                        <span class="aisle-card-name">${Utils.escapeHtml(aisle.name)}</span>
+                        <span class="aisle-card-count">${products.length ? products.length + ' products' : 'No products'}</span>
                         ${inListCount ? `<span class="aisle-in-list-count">✓ ${inListCount} in list</span>` : ''}
                     </div>
                     <button class="aisle-delete-btn" onclick="event.stopPropagation(); UI.confirmDeleteAisle(${aisle.id})">🗑</button>
@@ -197,7 +197,7 @@ const UI = {
         if (!aisle) return;
         this.currentAislePanel = aisleId;
         this.lastAislePanel = aisleId;
-        document.getElementById('aislePanelTitle').textContent = translateAisleName(aisle.name);
+        document.getElementById('aislePanelTitle').textContent = aisle.name;
         this.renderAislePanelProducts(aisleId);
         document.getElementById('aislePanelOverlay').classList.add('show');
         document.getElementById('navStoreScreen').classList.add('hidden');
@@ -235,7 +235,7 @@ const UI = {
                         data-name="${name.replace(/"/g, '&quot;')}"
                         data-in-list="${inList}">
                         <span class="panel-chip-name">${Utils.escapeHtml(name)}</span>
-                        <span class="panel-chip-badge ${inList ? 'in' : 'add'}">${inList ? t('inList') + (qty > 1 ? ' x' + qty : '') : t('add')}</span>
+                        <span class="panel-chip-badge ${inList ? 'in' : 'add'}">${inList ? '\u2713 In list' + (qty > 1 ? ' x' + qty : '') : '+ Add'}</span>
                     </div>
                     <button class="chip-delete-btn" onclick="UI.deleteProduct(${aisleId}, '${name.replace(/'/g, "\\'")}')">🗑</button>
                 </div>`;
@@ -275,13 +275,13 @@ const UI = {
         modal.innerHTML = `
             <div style="text-align:center;padding:8px 0 16px;">
                 <div style="font-size:36px;margin-bottom:10px;">➕</div>
-                <h3 style="margin:0 0 16px;">${t('addProduct2')}</h3>
-                <input type="text" id="addProductInput" placeholder="${t('addProductPlaceholder')}"
+                <h3 style="margin:0 0 16px;">Add Product</h3>
+                <input type="text" id="addProductInput" placeholder="e.g. White Bread..."
                     style="width:100%;padding:14px;border:1.5px solid #e5e7eb;border-radius:12px;font-size:16px;outline:none;text-align:center;box-sizing:border-box;margin-bottom:16px;"
                     onkeypress="if(event.key==='Enter') UI.addProductFromPanel(${aisleId})">
                 <div class="modal-actions">
-                    <button class="modal-btn cancel" onclick="Utils.closeModal()">${t('cancel')}</button>
-                    <button class="modal-btn confirm" onclick="UI.addProductFromPanel(${aisleId})">${t('add').replace('+ ', '')}</button>
+                    <button class="modal-btn cancel" onclick="Utils.closeModal()">Cancel</button>
+                    <button class="modal-btn confirm" onclick="UI.addProductFromPanel(${aisleId})">Add</button>
                 </div>
             </div>`;
         overlay.classList.add('show');
@@ -293,19 +293,14 @@ const UI = {
         if (!input) return;
         const name = input.value.trim();
         if (!name) { Utils.shakeElement(input); return; }
-        const aisle = API.aisles.find(a => a.id === aisleId);
-        if (!API.hasFullAccess && aisle && aisle.products.length >= 8) {
-            Utils.closeModal();
-            App.showUpgradePrompt('You\'ve reached the 8 product limit per aisle on the free plan. Upgrade to BasketMate Family for unlimited products.');
-            return;
-        }
+
         input.value = '';
         Utils.closeModal();
         try {
             await API.addProduct(aisleId, name);
             this.renderAislePanelProducts(aisleId);
-            Utils.showToast(t('addedToAisle', name));
-        } catch(e) { Utils.showToast(t('failedToAdd'), true); }
+            Utils.showToast(`${name} added to aisle ✓`);
+        } catch(e) { Utils.showToast('Failed to add product', true); }
     },
 
     async lookupPrice(name, aisleId) {
@@ -383,7 +378,7 @@ const UI = {
         API.items = API.items.filter(i => i.id !== itemId);
         this.renderAislePanelProducts(aisleId);
         UI.renderList();
-        Utils.showToast(t('removedFromList', name));
+        Utils.showToast(`${name} removed ✓`);
         API.deleteItem(itemId).catch(() => {});
     },
 
@@ -391,7 +386,7 @@ const UI = {
         try {
             await API.deleteItem(itemId);
             Utils.closeModal();
-            Utils.showToast(t('removedFromList', name));
+            Utils.showToast('Removed from list ✓');
             this.renderAislePanelProducts(aisleId);
         } catch(e) { Utils.showToast('Failed to remove', true); }
     },
@@ -425,7 +420,7 @@ const UI = {
                 API.items.push({ id: tempId, name, aisleId, storeId: API.currentStoreId, householdId: API.householdId, quantity: 1, isChecked: false, addedBy: API.memberName });
                 this.renderAislePanelProducts(aisleId);
                 UI.renderList();
-                Utils.showToast(t('addedToList', name));
+                Utils.showToast(`${name} added! 🛒`);
                 // Fire API in background — SSE will replace temp item
                 API.addItem({ name, aisleId, quantity: 1 }).then(newItem => {
                     if (newItem && newItem.id) {
@@ -435,11 +430,11 @@ const UI = {
                 }).catch(() => {
                     API.items = API.items.filter(i => i.id !== tempId);
                     UI.renderList();
-                    Utils.showToast(t('failedToAdd'), true);
+                    Utils.showToast('Failed to add item', true);
                 });
             }
         } catch(e) {
-            Utils.showToast(t('failedToAdd'), true);
+            Utils.showToast('Failed to add item', true);
         } finally {
             // Release lock after 1 second
             setTimeout(() => {
@@ -522,17 +517,13 @@ const UI = {
                     const idx = API.items.findIndex(i => i.id === tempItem.id);
                     if (idx !== -1) API.items[idx] = newItem;
                 }
-                Utils.showToast(t('addedToList', name));
+                Utils.showToast(`${name} added! 🛒`);
             }
-        } catch(e) { Utils.showToast(t('failedToAdd'), true); }
+        } catch(e) { Utils.showToast('Failed to add item', true); }
     },
 
     // ===== ADD / DELETE AISLE =====
     showAddAisle() {
-        if (!API.hasFullAccess && API.storeAisles.length >= 5) {
-            App.showUpgradePrompt('You\'ve reached the 5 aisle limit on the free plan. Upgrade to BasketMate Family for unlimited aisles.');
-            return;
-        }
         const modal = document.getElementById('modal');
         const overlay = document.getElementById('modalOverlay');
         modal.innerHTML = `
@@ -559,7 +550,7 @@ const UI = {
             await API.addAisle(name);
             Utils.closeModal();
             Utils.showToast(`${name} added!`);
-        } catch(e) { Utils.showToast(t('failedToAdd'), true); }
+        } catch(e) { Utils.showToast('Failed to add aisle', true); }
     },
 
     confirmDeleteAisle(aisleId) {
@@ -581,8 +572,8 @@ const UI = {
         try {
             await API.deleteAisle(aisleId);
             Utils.closeModal();
-            Utils.showToast(t('aisleDeleted'));
-        } catch(e) { Utils.showToast(t('failedToRemove'), true); }
+            Utils.showToast('Aisle deleted');
+        } catch(e) { Utils.showToast('Failed to delete aisle', true); }
     },
 
     // ===== SHOPPING LIST =====
@@ -591,7 +582,7 @@ const UI = {
         if (!container) return;
         const items = API.storeItems;
         if (!items.length) {
-            container.innerHTML = `<div class="empty-state"><div class="empty-icon">🛒</div><p>${t('listIsEmptyMsg')}</p><p class="empty-sub">${t('tapAisleMsg')}</p></div>`;
+            container.innerHTML = `<div class="empty-state"><div class="empty-icon">🛒</div><p>List is empty!</p><p class="empty-sub">Tap an aisle to add products.</p></div>`;
             return;
         }
         const grouped = {};
@@ -628,27 +619,6 @@ const UI = {
         </div>`;
     },
 
-    async handleCheck(id) {
-        try {
-            const result = await API.toggleCheck(id);
-            if (result && result.isChecked) {
-                // Update local state immediately and show crossed out
-                const idx = API.items.findIndex(i => i.id === id);
-                if (idx !== -1) API.items[idx].isChecked = true;
-                UI.renderList();
-                // Delete after short delay
-                setTimeout(async () => {
-                    try { await API.deleteItem(id); } catch(e) {}
-                    // Force remove from local state regardless
-                    API.items = API.items.filter(i => i.id !== id);
-                    UI.renderList();
-                    UI.renderStats();
-                }, 800);
-            }
-        } catch(e) {
-            console.log('handleCheck error:', e);
-        }
-    },
     async handleCheck(id) {
         try {
             const result = await API.toggleCheck(id);
@@ -691,7 +661,7 @@ const UI = {
 
     async confirmDelete(id) {
         try { await API.deleteItem(id); Utils.closeModal(); Utils.showToast('Removed ✓'); }
-        catch(e) { Utils.showToast(t('failedToRemove'), true); }
+        catch(e) { Utils.showToast('Failed to remove item', true); }
     },
 
     // ===== PRODUCT LIBRARY =====
@@ -747,44 +717,10 @@ const UI = {
                         <button class="del-btn" onclick="UI.deleteProduct(${aisleId}, '${n.replace(/'/g, "\\'")}')">🗑</button>
                     </div>`).join('');
             }
-        } catch(e) { Utils.showToast(t('failedToAdd'), true); }
+        } catch(e) { Utils.showToast('Failed to add product', true); }
     },
 
-    renderTrialBanner() {
-        // Remove existing banner
-        const existing = document.getElementById('trialBanner');
-        if (existing) existing.remove();
-        if (API.isPremium) return;
-        if (!API.trialStartedAt) return;
-        const daysLeft = API.trialDaysLeft;
-        if (daysLeft <= 0) {
-            // Trial expired — show persistent upgrade banner
-            const banner = document.createElement('div');
-            banner.id = 'trialBanner';
-            banner.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:9999;background:#dc2626;color:white;text-align:center;padding:10px 16px;font-size:13px;font-weight:600;cursor:pointer;';
-            banner.innerHTML = '⏰ Your free trial has ended. <u>Upgrade to BasketMate Family →</u>';
-            banner.onclick = () => App.showUpgradePrompt();
-            document.body.prepend(banner);
-        } else if (daysLeft <= 5) {
-            // Trial ending soon — show warning banner
-            const banner = document.createElement('div');
-            banner.id = 'trialBanner';
-            banner.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:9999;background:#f59e0b;color:white;text-align:center;padding:8px 16px;font-size:13px;font-weight:600;cursor:pointer;';
-            banner.innerHTML = `⏳ ${daysLeft} day${daysLeft !== 1 ? 's' : ''} left in your free trial. <u>Upgrade now →</u>`;
-            banner.onclick = () => App.showUpgradePrompt();
-            document.body.prepend(banner);
-        }
-        // Push body content down so banner doesn't cover header
-        const bannerEl = document.getElementById('trialBanner');
-        if (bannerEl) {
-            const h = bannerEl.offsetHeight || 40;
-            document.getElementById('homeScreen').style.paddingTop = h + 'px';
-            document.getElementById('storeScreen').style.paddingTop = h + 'px';
-        } else {
-            document.getElementById('homeScreen').style.paddingTop = '';
-            document.getElementById('storeScreen').style.paddingTop = '';
-        }
-    },
+    renderTrialBanner() { /* Disabled in private instance */ },
 
     async deleteProduct(aisleId, name) {
         try {
