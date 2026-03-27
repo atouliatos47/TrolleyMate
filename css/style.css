@@ -529,7 +529,7 @@ body {
 }
 
 /* --- 6b. Store Grid --- */
-.store-grid { display: flex; flex-direction: column; gap: 8px; }
+.store-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 
 .store-card {
     background: var(--bg-card);
@@ -1618,6 +1618,7 @@ body {
     .store-header { flex-wrap: wrap; height: auto; padding: 10px 14px; gap: 8px; }
     .modal { border-radius: var(--r-xl) var(--r-xl) 0 0; }
     .store-card-delete { opacity: 0.4; }
+    .store-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 }
 
 /* ===== PANEL ADD PRODUCT (bottom of aisle panel) ===== */
