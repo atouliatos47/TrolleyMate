@@ -275,71 +275,53 @@ Object.assign(App, {
     },
 
     showHelp() {
-        this.closeSettings();
-        const modal = document.getElementById('modal');
-        const overlay = document.getElementById('modalOverlay');
-        
-        modal.innerHTML = `
-            <h3 style="margin-bottom:20px;">${t('howToUse')}</h3>
-            <div style="margin-top:8px; font-size:15px; line-height:1.6; color:#374151;">
-                
-                <div style="display:flex; gap:12px; margin-bottom:16px;">
-                    <div style="font-size:24px; flex-shrink:0;">🏪</div>
-                    <div>
-                        <strong>Choose a Store</strong><br>
-                        <span style="color:#6b7280;">Tap a store on the home screen to open its shopping list.</span>
+            this.closeSettings();
+            const modal = document.getElementById('modal');
+            const overlay = document.getElementById('modalOverlay');
+            
+            modal.innerHTML = `
+                <h3 style="margin-bottom:20px;">${t('howToUse')}</h3>
+                <div style="margin-top:8px; font-size:15px; line-height:1.6; color:#374151;">
+                    
+                    <div style="display:flex; gap:12px; margin-bottom:16px;">
+                        <div style="font-size:24px; flex-shrink:0;">🏪</div>
+                        <div>
+                            <strong>Choose a Store</strong><br>
+                            <span style="color:#6b7280;">Tap a store on the home screen to open its shopping list.</span>
+                        </div>
+                    </div>
+                    <div style="display:flex; gap:12px; margin-bottom:16px;">
+                        <div style="font-size:24px; flex-shrink:0;">🗂️</div>
+                        <div>
+                            <strong>Add Items</strong><br>
+                            <span style="color:#6b7280;">Tap an aisle, then tap products to add them to your list.</span>
+                        </div>
+                    </div>
+                    <div style="display:flex; gap:12px; margin-bottom:16px;">
+                        <div style="font-size:24px; flex-shrink:0;">⭐</div>
+                        <div>
+                            <strong>Favourites</strong><br>
+                            <span style="color:#6b7280;">Tap the star next to any product to save it for quick access later.</span>
+                        </div>
+                    </div>
+                    <div style="display:flex; gap:12px; margin-bottom:16px;">
+                        <div style="font-size:24px; flex-shrink:0;">🛒</div>
+                        <div>
+                            <strong>Shopping Mode</strong><br>
+                            <span style="color:#6b7280;">Tap the cart icon at the bottom to enter shopping mode — tap items to check them off as you shop.</span>
+                        </div>
+                    </div>
+                    <div style="display:flex; gap:12px; margin-bottom:20px;">
+                        <div style="font-size:24px; flex-shrink:0;">🔄</div>
+                        <div>
+                            <strong>Reorder Aisles</strong><br>
+                            <span style="color:#6b7280;">Long-press an aisle and drag it up or down to reorder when the supermarket changes its layout.</span>
+                        </div>
                     </div>
                 </div>
-
-                <div style="display:flex; gap:12px; margin-bottom:16px;">
-                    <div style="font-size:24px; flex-shrink:0;">🗂️</div>
-                    <div>
-                        <strong>Add Items</strong><br>
-                        <span style="color:#6b7280;">Tap an aisle, then tap products to add them to your list.</span>
-                    </div>
-                </div>
-
-                <div style="display:flex; gap:12px; margin-bottom:16px;">
-                    <div style="font-size:24px; flex-shrink:0;">⭐</div>
-                    <div>
-                        <strong>Favourites</strong><br>
-                        <span style="color:#6b7280;">Tap the star next to any product to save it for quick access later.</span>
-                    </div>
-                </div>
-
-                <div style="display:flex; gap:12px; margin-bottom:16px;">
-                    <div style="font-size:24px; flex-shrink:0;">🛒</div>
-                    <div>
-                        <strong>Shopping Mode</strong><br>
-                        <span style="color:#6b7280;">Tap the cart icon at the bottom to enter shopping mode — tap items to check them off as you shop.</span>
-                    </div>
-                </div>
-
-                <div style="display:flex; gap:12px; margin-bottom:20px;">
-                    <div style="font-size:24px; flex-shrink:0;">🔄</div>
-                    <div>
-                        <strong>Reorder Aisles</strong><br>
-                        <span style="color:#6b7280;">Long-press an aisle and drag it up or down to reorder when the supermarket changes its layout.</span>
-                    </div>
-                </div>
-
-            </div>
-            <div class="modal-actions">
-                <button class="modal-btn cancel" onclick="Utils.closeModal()">${t('cancel')}</button>
-            </div>`;
-        overlay.classList.add('show');
-    },
-
-showUpgradePrompt() {
-        const modal = document.getElementById('modal');
-        const overlay = document.getElementById('modalOverlay');
-
-        modal.innerHTML = `
-            <div style="text-align:center;padding:20px 8px;">
-                <div style="font-size:48px;margin-bottom:16px;">⭐</div>
-                <h3 style="margin:0 0 12px;">Upgrade to BasketMate Family</h3>
-                ...
-            </div>`;
-        overlay.classList.add('show');
-    },
-});
+                <div class="modal-actions">
+                    <button class="modal-btn cancel" onclick="Utils.closeModal()">${t('cancel')}</button>
+                </div>`;
+            overlay.classList.add('show');
+        },
+    });
