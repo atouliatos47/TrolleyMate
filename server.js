@@ -274,7 +274,7 @@ const server = http.createServer(async (req, res) => {
 
     if (pathname === '/.well-known/assetlinks.json') {
         res.writeHead(200, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify([{ relation: ['delegate_permission/common.handle_all_urls'], target: { namespace: 'android_app', package_name: 'com.onrender.trolleymate.twa', sha256_cert_fingerprints: ['C6:09:97:89:D8:23:E0:B3:67:17:02:2D:30:C4:C6:1D:CB:3F:1C:42:0D:AD:32:ED:3F:1A:49:25:39:D1:54:8C'] } }]));
+        res.end(JSON.stringify([{ relation: ['delegate_permission/common.handle_all_urls'], target: { namespace: 'android_app', package_name: 'com.onrender.trolleymate.twa', sha256_cert_fingerprints: ['09:29:95:10:08:53:E0:A7:32:17:F1:98:C1:1B:88:4F:A3:76:1B:36:D6:18:95:11:2B:74:7B:F4:B4:80:39:49'] } }]));
         return;
     }
 
