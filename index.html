@@ -5,23 +5,19 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>BasketMate</title>
-
     <meta name="theme-color" content="#005EA5">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="BasketMate">
-
     <link rel="manifest" href="/manifest.json">
-
-    <link rel="icon" href="/img/icon-192.png" type="image/png">
     <link rel="apple-touch-icon" sizes="180x180" href="/img/icon-180.png">
-
-
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="/css/style.css">
     <script>if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js');</script>
+    <link rel="icon" type="image/png" href="/img/icon-192.png">
+
 </head>
 
 <body>
@@ -43,7 +39,7 @@
     </div>
 
     <!-- ===== HOME SCREEN ===== -->
-    <div id="homeScreen">
+    <div id="homeScreen" class="hidden">
 
         <div class="home-header">
             <div class="home-title">🛒 BasketMate</div>
@@ -73,7 +69,7 @@
     <div class="settings-overlay" id="settingsOverlay" onclick="App.closeSettings()"></div>
     <div class="settings-panel" id="settingsPanel">
         <div class="settings-header">
-            <span class="settings-title" id="settingsTitleText">⚙️ Settings</span>
+            <span class="settings-title">⚙️ Settings</span>
             <button class="settings-close" onclick="App.closeSettings()">✕</button>
         </div>
         <div class="settings-body">
@@ -88,8 +84,8 @@
                     </svg>
                 </div>
                 <div class="settings-item-text">
-                    <div class="settings-item-title" id="settingsMyCodeTitle">My Household Code</div>
-                    <div class="settings-item-sub" id="settingsMyCodeSub">Share with family to join your list</div>
+                    <div class="settings-item-title">My Household Code</div>
+                    <div class="settings-item-sub">Share with family to join your list</div>
                 </div>
                 <span class="settings-item-arrow">›</span>
             </div>
@@ -102,7 +98,7 @@
                     </svg>
                 </div>
                 <div class="settings-item-text">
-                    <div class="settings-item-title" id="settingsChangeNameTitle">Change My Name</div>
+                    <div class="settings-item-title">Change My Name</div>
                     <div class="settings-item-sub" id="currentNameSub">Your name on shared lists</div>
                 </div>
                 <span class="settings-item-arrow">›</span>
@@ -118,8 +114,8 @@
                     </svg>
                 </div>
                 <div class="settings-item-text">
-                    <div class="settings-item-title" id="settingsJoinTitle">Join a Household</div>
-                    <div class="settings-item-sub" id="settingsJoinSub">Enter a partner's code to share their list</div>
+                    <div class="settings-item-title">Join a Household</div>
+                    <div class="settings-item-sub">Enter a partner's code to share their list</div>
                 </div>
                 <span class="settings-item-arrow">›</span>
             </div>
@@ -135,7 +131,7 @@
                     </svg>
                 </div>
                 <div class="settings-item-text">
-                    <div class="settings-item-title" id="settingsSilentTitle">Silent Mode</div>
+                    <div class="settings-item-title">Silent Mode</div>
                     <div class="settings-item-sub" id="silentModeSub">Mute item ping sounds</div>
                 </div>
                 <div id="silentModeToggle"
@@ -144,24 +140,6 @@
                         style="width:20px;height:20px;border-radius:50%;background:white;position:absolute;top:2px;left:2px;transition:left 0.2s;box-shadow:0 1px 3px rgba(0,0,0,0.2);">
                     </div>
                 </div>
-            </div>
-
-            <div class="settings-divider"></div>
-
-            <div class="settings-item" onclick="App.showLanguageSelector()">
-                <div class="settings-item-icon">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <circle cx="12" cy="12" r="10" />
-                        <line x1="2" y1="12" x2="22" y2="12" />
-                        <path
-                            d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
-                    </svg>
-                </div>
-                <div class="settings-item-text">
-                    <div class="settings-item-title" id="settingsLanguageTitle">Language</div>
-                    <div class="settings-item-sub" id="currentLanguageSub">English 🇬🇧</div>
-                </div>
-                <span class="settings-item-arrow">›</span>
             </div>
 
             <div class="settings-divider"></div>
@@ -175,8 +153,8 @@
                     </svg>
                 </div>
                 <div class="settings-item-text">
-                    <div class="settings-item-title" id="settingsHelpTitle">How to Use BasketMate</div>
-                    <div class="settings-item-sub" id="settingsHelpSub">Tips and features guide</div>
+                    <div class="settings-item-title">How to Use BasketMate</div>
+                    <div class="settings-item-sub">Tips and features guide</div>
                 </div>
                 <span class="settings-item-arrow">›</span>
             </div>
@@ -219,8 +197,8 @@
             <!-- LEFT: AISLES -->
             <div class="aisles-panel">
                 <div class="panel-header">
-                    <h2 id="aislesHeader">🏪 Aisles</h2>
-                    <span class="panel-sub" id="aislesSubHeader">Tap an aisle to add products</span>
+                    <h2>🏪 Aisles</h2>
+                    <span class="panel-sub">Tap an aisle to add products</span>
                 </div>
                 <div class="aisles-container" id="aislesContainer"></div>
             </div>
@@ -229,10 +207,8 @@
             <div class="list-panel">
                 <div class="panel-header">
                     <div class="list-tabs">
-                        <button class="list-tab active" id="tabList" onclick="UI.switchListTab('list')">📋 <span
-                                id="tabListLabel">List</span></button>
-                        <button class="list-tab" id="tabFavs" onclick="UI.switchListTab('favs')">⭐ <span
-                                id="tabFavsLabel">Favourites</span></button>
+                        <button class="list-tab active" id="tabList" onclick="UI.switchListTab('list')">📋 List</button>
+                        <button class="list-tab" id="tabFavs" onclick="UI.switchListTab('favs')">⭐ Favourites</button>
                     </div>
                 </div>
                 <div class="list-container" id="listContainer"></div>
@@ -272,7 +248,7 @@
                         <rect x="14" y="14" width="4" height="4" rx="1" />
                     </svg>
                 </div>
-                <span class="nav-label" id="navLabelMyCode">My Code</span>
+                <span class="nav-label">My Code</span>
             </button>
             <button class="nav-btn-home" onclick="App.smartHome()">
                 <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
@@ -282,14 +258,14 @@
             </button>
             <button class="nav-btn-add" onclick="App.showAddStore()">
                 <div class="nav-icon-wrap">➕</div>
-                <span class="nav-label" id="navLabelAddStore">Add Store</span>
+                <span class="nav-label">Add Store</span>
             </button>
         </div>
         <!-- STORE SCREEN NAV -->
         <div class="nav-store-screen hidden" id="navStoreScreen">
             <button class="nav-btn-shop" id="navBtnShop" onclick="App.openShoppingMode()">
                 <div class="nav-icon-wrap">🛒</div>
-                <span class="nav-label" id="navLabelMyList2">My List</span>
+                <span class="nav-label">My List</span>
             </button>
             <button class="nav-btn-back" onclick="App.smartHome()">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"
@@ -306,12 +282,19 @@
                     <path d="M19 12H5M12 5l-7 7 7 7" />
                 </svg>
             </button>
+            <button class="nav-btn-back" onclick="App.closeShoppingMode(); App.goHome();"
+                style="left:calc(50% + 80px);">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+                    <path d="M3 9.5L12 3L21 9.5V20C21 20.55 20.55 21 20 21H15V15H9V21H4C3.45 21 3 20.55 3 20V9.5Z"
+                        fill="white" />
+                </svg>
+            </button>
         </div>
         <!-- AISLE PANEL NAV -->
         <div class="nav-aisle-panel hidden" id="navAislePanel">
             <button class="nav-btn-shop" onclick="App.openShoppingMode()">
                 <div class="nav-icon-wrap">🛒</div>
-                <span class="nav-label" id="navLabelMyList3">My List</span>
+                <span class="nav-label">My List</span>
             </button>
             <button class="nav-btn-back" onclick="App.smartHome()">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"
@@ -321,7 +304,7 @@
             </button>
             <button class="nav-btn-add-product" id="navBtnAddProduct" onclick="UI.showAddProductInput()">
                 <div class="nav-icon-wrap">➕</div>
-                <span class="nav-label" id="navLabelAddProduct">Add Product</span>
+                <span class="nav-label">Add Product</span>
             </button>
         </div>
     </div>
@@ -330,7 +313,7 @@
     <div class="shopping-mode-overlay hidden" id="shoppingModeOverlay">
         <div class="shopping-mode-header">
             <div class="shopping-mode-header-top">
-                <span class="shopping-mode-label" id="shoppingModeLabel">🛒 Shopping List</span>
+                <span class="shopping-mode-label">🛒 Shopping List</span>
                 <span class="shopping-mode-stats" id="shoppingModeStats"></span>
 
             </div>
@@ -339,7 +322,11 @@
         <div class="shopping-mode-list" id="shoppingModeList"></div>
     </div>
 
+    <!-- Sortable.js -->
+    <!-- Sortable.js -->
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
+
+    <!-- 1. i18n Core + Languages (must stay first) -->
     <script src="/js/i18n/core.js"></script>
     <script src="/js/i18n/lang-en.js"></script>
     <script src="/js/i18n/lang-pl.js"></script>
@@ -350,13 +337,20 @@
     <script src="/js/i18n/lang-bn.js"></script>
     <script src="/js/i18n/lang-zh.js"></script>
 
+    <!-- 2. Utilities -->
     <script src="/js/utils.js"></script>
+
+    <!-- 3. API -->
     <script src="/js/api.js"></script>
-    <script src="/js/ui.js"></script>
+
+    <!-- 4. Core App - MUST load BEFORE modules that extend it -->
     <script src="/js/app.js"></script>
+
+    <!-- 5. Modules that extend App -->
     <script src="/js/stores.js"></script>
-    <script src="/js/shopping.js"></script>
+    <script src="/js/ui.js"></script>
     <script src="/js/settings.js"></script>
+    <script src="/js/shopping.js"></script>
 
 </body>
 
