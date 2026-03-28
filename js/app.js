@@ -353,10 +353,10 @@ const App = {
             <div style="text-align:center;padding:8px 0 16px;">
                 <div style="font-size:52px;margin-bottom:8px;">👨‍👩‍👧‍👦</div>
                 <h2 style="margin:0 0 4px;font-size:22px;color:#1a1a2e;">BasketMate Family</h2>
-                <p style="color:#6b7280;font-size:13px;margin:0 0 14px;">One purchase. Your whole family. Forever.</p>
+                <p style="color:#6b7280;font-size:13px;margin:0 0 14px;">${t('upgradeModalTagline')}</p>
 
                 ${trialExpired
-                    ? `<div style="background:#fee2e2;border-radius:10px;padding:10px;margin-bottom:14px;font-size:13px;color:#dc2626;font-weight:600;">⏰ Your household's 15-day free trial has ended</div>`
+                    ? `<div style="background:#fee2e2;border-radius:10px;padding:10px;margin-bottom:14px;font-size:13px;color:#dc2626;font-weight:600;">⏰ ${t('trialExpiredMsg') || "Your household's 15-day free trial has ended"}</div>`
                     : daysLeft <= 5
                     ? `<div style="background:#fef3c7;border-radius:10px;padding:10px;margin-bottom:14px;font-size:13px;color:#d97706;font-weight:600;">⏳ ${daysLeft} day${daysLeft !== 1 ? 's' : ''} left in your household trial</div>`
                     : ''
@@ -365,38 +365,38 @@ const App = {
 
                 <!-- Family sharing highlight -->
                 <div style="background:#f0fdf4;border:1.5px solid #86efac;border-radius:14px;padding:14px 16px;margin-bottom:14px;text-align:left;">
-                    <div style="font-size:13px;font-weight:700;color:#15803d;margin-bottom:8px;">🏠 How family sharing works:</div>
+                    <div style="font-size:13px;font-weight:700;color:#15803d;margin-bottom:8px;">🏠 ${t('howFamilySharingWorks')}</div>
                     <div style="font-size:13px;color:#374151;line-height:1.8;">
-                        Only <strong>one person</strong> needs to upgrade.<br>
-                        Everyone using your <strong>household code</strong> gets full access automatically — no extra payments needed.
+                        ${t('onlyOnePerson')}<br>
+                        ${t('householdCodeAccess')}
                     </div>
                 </div>
 
                 <!-- Feature list -->
                 <div style="background:#f8fafc;border-radius:14px;padding:14px 16px;margin-bottom:14px;text-align:left;">
-                    <div style="font-size:13px;font-weight:700;color:#1a1a2e;margin-bottom:8px;">What you unlock:</div>
+                    <div style="font-size:13px;font-weight:700;color:#1a1a2e;margin-bottom:8px;">${t('whatYouUnlock')}</div>
                     <div style="font-size:13px;color:#374151;line-height:1.9;">
-                        ✅ Unlimited stores, aisles & products<br>
-                        ✅ Real-time sync across all family devices<br>
-                        ✅ Push notifications when items are added<br>
-                        ✅ Full access for everyone on your code
+                        ✅ ${t('unlimitedStoresAisles')}<br>
+                        ✅ ${t('realtimeSync')}<br>
+                        ✅ ${t('pushWhenAdded')}<br>
+                        ✅ ${t('fullAccessForAll')}
                     </div>
                 </div>
 
                 <!-- Price -->
                 <div style="background:#005EA5;color:white;border-radius:14px;padding:14px 16px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;">
                     <div style="text-align:left;">
-                        <div style="font-size:12px;opacity:0.8;margin-bottom:2px;">One-time payment</div>
-                        <div style="font-size:12px;opacity:0.8;">Covers your whole family forever</div>
+                        <div style="font-size:12px;opacity:0.8;margin-bottom:2px;">${t('oneTimePayment')}</div>
+                        <div style="font-size:12px;opacity:0.8;">${t('coversFamily')}</div>
                     </div>
                     <div style="font-size:30px;font-weight:900;">£2.99</div>
                 </div>
 
                 <button onclick="App.triggerPurchase()" style="width:100%;padding:15px;background:#16a34a;color:white;border:none;border-radius:12px;font-size:16px;font-weight:700;cursor:pointer;margin-bottom:10px;letter-spacing:-0.2px;">
-                    Upgrade My Household — £2.99
+                    ${t('upgradeMyHousehold')}
                 </button>
                 <button onclick="Utils.closeModal()" style="width:100%;padding:12px;background:none;color:#9ca3af;border:none;font-size:14px;cursor:pointer;">
-                    ${API.isTrialActive ? 'Continue with trial' : 'Maybe later'}
+                    ${API.isTrialActive ? t('continueWithTrial') : t('maybeLater')}
                 </button>
             </div>`;
         overlay.classList.add('show');
