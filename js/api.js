@@ -68,6 +68,10 @@ const API = {
         this.householdCode = data.code;
         localStorage.setItem('bm_household_id', data.id);
         localStorage.setItem('bm_household_code', data.code);
+        // Give joiner their own fresh 15-day trial from join date
+        const trialStart = new Date().toISOString();
+        localStorage.setItem('bm_trial_started', trialStart);
+        this.trialStartedAt = trialStart;
         return data;
     },
 
