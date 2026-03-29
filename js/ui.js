@@ -476,8 +476,8 @@ const UI = {
             container.innerHTML = `
                 <div class="empty-state">
                     <div class="empty-icon">⭐</div>
-                    <p>No favourites yet!</p>
-                    <p class="empty-sub">Tap ⭐ on any product in an aisle to save it.</p>
+                    <p>${t('noFavouritesYet')}</p>
+                    <p class="empty-sub">${t('tapStarToSave')}</p>
                 </div>`;
             return;
         }
